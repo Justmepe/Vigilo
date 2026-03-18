@@ -13,6 +13,7 @@ const bcrypt = require('bcrypt');
 const sharepointService = require('../services/sharepointService');
 const path = require('path');
 const fs = require('fs');
+const AIReportGenerator = require('../services/aiReportGenerator');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -784,5 +785,57 @@ exports.updateCompanySettings = async (req, res) => {
   } catch (err) {
     logger.error('updateCompanySettings error:', err);
     res.status(500).json({ success: false, message: 'Failed to save settings' });
+  }
+};
+
+/**
+ * POST /api/admin/documents/:id/regenerate-ai
+ * Regenerate AI report for a form that failed or was never generated
+ */
+exports.regenerateAIReport = async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const { id } = req.params;
+    const { source = 'form' } = req.body;
+
+    if (source === 'audit') {
+      const row = await db.getAsync('SELECT * FROM audit_forms WHERE id = ?', [id]);
+      if (!row) return res.status(404).json({ success: false, message: 'Audit not found' });
+
+      const formData = {
+        formId: row.id,
+        formType: 'oshaAudit',
+        formData: typeof row.form_data === 'string' ? JSON.parse(row.form_data) : row.form_data,
+        userId: row.user_id,
+      };
+      setImmediate(async () => {
+        try {
+          await AIReportGenerator.generateReportAsync(row.id, formData);
+          // Update audit_forms table with the generated report
+          await db.runAsync(
+            'UPDATE audit_forms SET ai_report = (SELECT ai_report FROM forms WHERE id = $1) WHERE id = $2',
+            [row.id, row.id]
+          );
+        } catch (e) { logger.error('Audit AI regen failed', e); }
+      });
+      return res.json({ success: true, message: 'AI report generation started' });
+    }
+
+    // Regular form
+    const row = await db.getAsync('SELECT * FROM forms WHERE id = ?', [id]);
+    if (!row) return res.status(404).json({ success: false, message: 'Form not found' });
+
+    const formData = {
+      formId: row.id,
+      formType: row.form_type,
+      formData: typeof row.form_data === 'string' ? JSON.parse(row.form_data) : row.form_data,
+      userId: row.user_id,
+    };
+
+    setImmediate(() => AIReportGenerator.generateReportAsync(row.id, formData));
+    res.json({ success: true, message: 'AI report generation started' });
+  } catch (err) {
+    logger.error('regenerateAIReport error:', err);
+    res.status(500).json({ success: false, message: 'Failed to start AI generation' });
   }
 };

@@ -20,6 +20,7 @@ router.get('/documents/:id', adminController.getDocumentById);
 router.patch('/documents/:id/status', adminController.updateDocumentStatus);
 router.post('/documents/:id/archive', adminController.archiveDocument);
 router.post('/documents/:id/unarchive', adminController.unarchiveDocument);
+router.post('/documents/:id/regenerate-ai', adminController.regenerateAIReport);
 router.delete('/documents/:id', adminController.deleteDocument);
 
 // ── User Management ────────────────────────────────────────────────────────────

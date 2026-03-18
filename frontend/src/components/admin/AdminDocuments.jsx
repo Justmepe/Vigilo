@@ -65,7 +65,7 @@ const StatusBadge = ({ status }) => {
   );
 }
 
-const DocumentDetailModal = ({ doc, onClose, onStatusChange, onArchive, onSync }) => {
+const DocumentDetailModal = ({ doc, onClose, onStatusChange, onArchive, onSync, onDownload, onRegenerateAI }) => {
   if (!doc) return null;
   const data = doc.form_data || {};
 
@@ -122,10 +122,24 @@ const DocumentDetailModal = ({ doc, onClose, onStatusChange, onArchive, onSync }
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 p-5 border-t bg-gray-50">
+          <button
+            onClick={() => onDownload(doc)}
+            className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1"
+          >
+            <Download size={14} /> Download
+          </button>
+          {!doc.has_ai_report && (
+            <button
+              onClick={() => onRegenerateAI(doc)}
+              className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
+            >
+              ✦ Generate AI Report
+            </button>
+          )}
           {!doc.archived_at && doc.status !== 'reviewed' && (
             <button
               onClick={() => onStatusChange(doc, 'reviewed')}
-              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Mark Reviewed
             </button>
@@ -149,7 +163,7 @@ const DocumentDetailModal = ({ doc, onClose, onStatusChange, onArchive, onSync }
           {doc.sharepoint_status !== 'synced' && (
             <button
               onClick={() => onSync(doc)}
-              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1"
+              className="px-3 py-1.5 text-sm bg-sky-600 text-white rounded hover:bg-sky-700 flex items-center gap-1"
             >
               <Cloud size={14} /> Sync to SharePoint
             </button>
@@ -258,6 +272,17 @@ const AdminDocuments = ({ showArchived = false }) => {
       load();
     } catch (err) {
       flash(err.message, true);
+    }
+  };
+
+  const handleRegenerateAI = async (doc) => {
+    try {
+      flash('Generating AI report…');
+      await apiClient.post(`/admin/documents/${doc.id}/regenerate-ai`, { source: doc.source });
+      flash('AI report generation started — refresh in a few seconds');
+      setSelectedDoc(null);
+    } catch (err) {
+      flash('AI generation failed: ' + err.message, true);
     }
   };
 
@@ -486,6 +511,8 @@ const AdminDocuments = ({ showArchived = false }) => {
           onStatusChange={handleStatusChange}
           onArchive={handleArchive}
           onSync={handleSync}
+          onDownload={handleDownload}
+          onRegenerateAI={handleRegenerateAI}
         />
       )}
     </div>
