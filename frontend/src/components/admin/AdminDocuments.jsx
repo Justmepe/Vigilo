@@ -291,7 +291,7 @@ const AdminDocuments = ({ showArchived = false }) => {
       const url = doc.source === 'audit'
         ? `/api/audit/${doc.id}/export-docx`
         : `/api/forms/${doc.id}/export-pdf`;
-      const token = localStorage.getItem('vigilo_token') || localStorage.getItem('safety_jwt_token');
+      const token = localStorage.getItem('authToken');
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const blob = await res.blob();
