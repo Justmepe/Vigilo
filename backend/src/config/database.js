@@ -1,46 +1,65 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
 
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../../database/safety_manager.db');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+});
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('❌ Database connection error:', err.message);
-    process.exit(1);
-  } else {
-    console.log('✅ Connected to SQLite database');
+pool.on('connect', () => {
+  if (process.env.NODE_ENV !== 'test') {
+    console.log('✅ Connected to PostgreSQL database');
   }
 });
 
-// Enable foreign keys
-db.run('PRAGMA foreign_keys = ON');
+pool.on('error', (err) => {
+  console.error('❌ PostgreSQL pool error:', err.message);
+  process.exit(1);
+});
 
-// Helper function to run queries with promises
-db.runAsync = function(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    this.run(sql, params, function(err) {
-      if (err) reject(err);
-      else resolve({ id: this.lastID, changes: this.changes });
-    });
-  });
-};
+// Convert SQLite-style ? placeholders to PostgreSQL $1, $2, $3...
+function convertPlaceholders(sql) {
+  let i = 0;
+  return sql.replace(/\?/g, () => `$${++i}`);
+}
 
-db.getAsync = function(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    this.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
+const db = {
+  // Run INSERT / UPDATE / DELETE — returns { id, changes }
+  runAsync(sql, params = []) {
+    const pgSql = convertPlaceholders(sql) + ' RETURNING id';
+    return pool.query(pgSql, params).then((res) => ({
+      id: res.rows[0]?.id ?? null,
+      changes: res.rowCount,
+    })).catch((err) => {
+      // If RETURNING id fails (e.g. UPDATE with no id col), retry without it
+      if (err.message.includes('RETURNING')) {
+        return pool.query(convertPlaceholders(sql), params).then((res) => ({
+          id: null,
+          changes: res.rowCount,
+        }));
+      }
+      throw err;
     });
-  });
-};
+  },
 
-db.allAsync = function(sql, params = []) {
-  return new Promise((resolve, reject) => {
-    this.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+  // SELECT single row
+  getAsync(sql, params = []) {
+    return pool.query(convertPlaceholders(sql), params).then((res) => res.rows[0] ?? null);
+  },
+
+  // SELECT multiple rows
+  allAsync(sql, params = []) {
+    return pool.query(convertPlaceholders(sql), params).then((res) => res.rows);
+  },
+
+  // Raw query (for migrations / schema setup)
+  query(sql, params = []) {
+    return pool.query(sql, params);
+  },
+
+  // For transaction support
+  getClient() {
+    return pool.connect();
+  },
 };
 
 module.exports = db;
