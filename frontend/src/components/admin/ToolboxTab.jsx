@@ -1,19 +1,9 @@
 /**
  * Toolbox Talks Tab — safety briefings schedule & attendance tracking
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, MessageSquare, Users, CheckCircle, Clock, Download } from 'lucide-react';
-
-const TALKS = [
-  { id: 'TBT-2024-018', date: '2024-03-14', topic: 'Heat Stress & Hydration',           presenter: 'K. Tanaka',  attended: 17, scheduled: 20, duration: 15, shift: 'Day',       status: 'Done', materials: true  },
-  { id: 'TBT-2024-017', date: '2024-03-11', topic: 'Forklift Safety & Pedestrian Zones', presenter: 'M. Flores',  attended: 22, scheduled: 22, duration: 20, shift: 'All',       status: 'Done', materials: true  },
-  { id: 'TBT-2024-016', date: '2024-03-07', topic: 'Chemical Handling — H2S Awareness',  presenter: 'S. O\'Brien', attended: 19, scheduled: 20, duration: 25, shift: 'Day',       status: 'Done', materials: true  },
-  { id: 'TBT-2024-015', date: '2024-03-04', topic: 'Emergency Evacuation Procedures',    presenter: 'S. O\'Brien', attended: 28, scheduled: 30, duration: 20, shift: 'All',       status: 'Done', materials: false },
-  { id: 'TBT-2024-019', date: '2024-03-18', topic: 'Manual Handling & Ergonomics',       presenter: 'C. Davis',   attended: null,scheduled: 18, duration: 15, shift: 'Day',       status: 'Scheduled', materials: false },
-  { id: 'TBT-2024-020', date: '2024-03-21', topic: 'Working at Height — Harness Checks', presenter: 'T. Reed',    attended: null,scheduled: 12, duration: 20, shift: 'Afternoon', status: 'Scheduled', materials: false },
-  { id: 'TBT-2024-021', date: '2024-03-25', topic: 'PPE Selection & Inspection',         presenter: 'K. Tanaka',  attended: null,scheduled: 25, duration: 15, shift: 'All',       status: 'Scheduled', materials: false },
-  { id: 'TBT-2024-022', date: '2024-03-28', topic: 'Incident Reporting & Near Misses',   presenter: 'S. O\'Brien', attended: null,scheduled: 20, duration: 20, shift: 'Day',      status: 'Scheduled', materials: false },
-];
+import apiClient from '../../services/api/client';
 
 const TOPICS_BANK = [
   'Slips, Trips & Falls', 'Confined Space Entry', 'Electrical Safety', 'Fire Prevention',
@@ -25,28 +15,51 @@ const STATUSES = ['All Status','Done','Scheduled'];
 const SHIFTS   = ['All Shifts','Day','Afternoon','Night','All'];
 
 const ToolboxTab = () => {
-  const [status, setStatus] = useState('All Status');
-  const [shift, setShift]   = useState('All Shifts');
+  const [talks, setTalks]     = useState([]);
+  const [counts, setCounts]   = useState({ total: 0, done: 0, scheduled: 0, total_attended: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+  const [status, setStatus]   = useState('All Status');
+  const [shift, setShift]     = useState('All Shifts');
 
-  const filtered = TALKS.filter(t =>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/toolbox');
+        if (res.data.success) {
+          setTalks(res.data.data);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load toolbox talks');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filtered = talks.filter(t =>
     (status === 'All Status' || t.status === status) &&
     (shift  === 'All Shifts' || t.shift  === shift)
   );
 
-  const done     = TALKS.filter(t => t.status === 'Done').length;
-  const sched    = TALKS.filter(t => t.status === 'Scheduled').length;
-  const totalAtt = TALKS.filter(t => t.attended).reduce((s, t) => s + t.attended, 0);
-  const totalSch = TALKS.filter(t => t.attended).reduce((s, t) => s + t.scheduled, 0);
-  const avgAtt   = Math.round((totalAtt / totalSch) * 100);
+  const doneTalks = talks.filter(t => t.attended);
+  const totalSch  = doneTalks.reduce((s, t) => s + t.scheduled, 0);
+  const avgAtt    = totalSch ? Math.round((counts.total_attended / totalSch) * 100) : 0;
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="sg4">
         {[
-          { label: 'Completed MTD',    value: done,    accent: '#16a34a', sub: `${TALKS.length} total this month` },
-          { label: 'Scheduled',        value: sched,   accent: '#2563eb', sub: 'Upcoming talks' },
-          { label: 'Total Attendees',  value: totalAtt,accent: '#7c3aed', sub: 'This month to date' },
-          { label: 'Avg Attendance',   value: `${avgAtt}%`, accent: avgAtt >= 90 ? '#16a34a' : '#ea580c', sub: 'vs. scheduled' },
+          { label: 'Completed MTD',    value: counts.done,           accent: '#16a34a', sub: `${counts.total} total this month` },
+          { label: 'Scheduled',        value: counts.scheduled,      accent: '#2563eb', sub: 'Upcoming talks' },
+          { label: 'Total Attendees',  value: counts.total_attended, accent: '#7c3aed', sub: 'This month to date' },
+          { label: 'Avg Attendance',   value: `${avgAtt}%`,          accent: avgAtt >= 90 ? '#16a34a' : '#ea580c', sub: 'vs. scheduled' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />
@@ -62,7 +75,7 @@ const ToolboxTab = () => {
         <div className="acard">
           <div className="ch"><h3>Next Scheduled Talk</h3></div>
           {(() => {
-            const next = TALKS.find(t => t.status === 'Scheduled');
+            const next = talks.find(t => t.status === 'Scheduled');
             if (!next) return <div style={{ padding: 18, color: '#94a3b8' }}>No upcoming talks scheduled</div>;
             return (
               <div style={{ padding: '16px 18px' }}>
@@ -168,6 +181,9 @@ const ToolboxTab = () => {
             </div>
           );
         })}
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#94a3b8', padding: 24 }}>No talks match the current filters</div>
+        )}
       </div>
     </div>
   );

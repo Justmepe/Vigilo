@@ -1,48 +1,56 @@
 /**
  * PPE Tracker Tab — inventory levels, stock vs minimum, compliance %
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, AlertTriangle } from 'lucide-react';
-
-const INVENTORY = [
-  { item: 'Hard Hat (Class E)',          category: 'Head',        stock: 48, min: 20, unit: 'ea',  condition: 'Good',   compliance: 98, lastAudit: '2024-03-10', location: 'PPE Store A' },
-  { item: 'Safety Glasses (Clear)',      category: 'Eye',         stock: 32, min: 30, unit: 'ea',  condition: 'Good',   compliance: 95, lastAudit: '2024-03-10', location: 'PPE Store A' },
-  { item: 'Safety Glasses (Tinted)',     category: 'Eye',         stock: 8,  min: 15, unit: 'ea',  condition: 'Good',   compliance: 95, lastAudit: '2024-03-10', location: 'PPE Store A' },
-  { item: 'Face Shield',                 category: 'Eye/Face',    stock: 6,  min: 8,  unit: 'ea',  condition: 'Good',   compliance: 90, lastAudit: '2024-03-10', location: 'PPE Store B' },
-  { item: 'H2S Detector (Personal)',     category: 'Gas',         stock: 12, min: 15, unit: 'ea',  condition: 'Fair',   compliance: 82, lastAudit: '2024-03-08', location: 'Safety Office' },
-  { item: 'Half-Face Respirator P100',   category: 'Respiratory', stock: 18, min: 10, unit: 'ea',  condition: 'Good',   compliance: 94, lastAudit: '2024-03-10', location: 'PPE Store B' },
-  { item: 'Filter Cartridges OV/P100',   category: 'Respiratory', stock: 24, min: 30, unit: 'pairs', condition: 'Good', compliance: 94, lastAudit: '2024-03-10', location: 'PPE Store B' },
-  { item: 'Nitrile Gloves (M)',          category: 'Hand',        stock: 200,min: 100,unit: 'pairs', condition: 'Good', compliance: 99, lastAudit: '2024-03-12', location: 'PPE Store A' },
-  { item: 'Cut-Resistant Gloves (L)',    category: 'Hand',        stock: 14, min: 20, unit: 'pairs', condition: 'Good', compliance: 91, lastAudit: '2024-03-12', location: 'PPE Store A' },
-  { item: 'Safety Boots (Steel Toe)',    category: 'Foot',        stock: 10, min: 10, unit: 'pairs', condition: 'Good', compliance: 97, lastAudit: '2024-03-10', location: 'PPE Store A' },
-  { item: 'Hi-Vis Vest (Class 2)',       category: 'Visibility',  stock: 55, min: 40, unit: 'ea',  condition: 'Good',   compliance: 100,lastAudit: '2024-03-12', location: 'PPE Store A' },
-  { item: 'Full Body Harness',           category: 'Fall Arrest', stock: 8,  min: 6,  unit: 'ea',  condition: 'Good',   compliance: 88, lastAudit: '2024-03-05', location: 'PPE Store B' },
-  { item: 'Hearing Protection (Plug)',   category: 'Hearing',     stock: 500,min: 200,unit: 'pairs', condition: 'Good', compliance: 93, lastAudit: '2024-03-12', location: 'PPE Store A' },
-  { item: 'Chemical Splash Suit',        category: 'Body',        stock: 3,  min: 5,  unit: 'ea',  condition: 'Good',   compliance: 86, lastAudit: '2024-03-10', location: 'PPE Store B' },
-];
+import apiClient from '../../services/api/client';
 
 const CATS = ['All Categories','Head','Eye','Eye/Face','Gas','Respiratory','Hand','Foot','Visibility','Fall Arrest','Hearing','Body'];
 
 const PPETab = () => {
-  const [cat, setCat] = useState('All Categories');
+  const [inventory, setInventory] = useState([]);
+  const [counts, setCounts]       = useState({ total: 0, low_stock: 0 });
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [cat, setCat]             = useState('All Categories');
 
-  const filtered = INVENTORY.filter(i => cat === 'All Categories' || i.category === cat);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/ppe');
+        if (res.data.success) {
+          setInventory(res.data.data);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load PPE inventory');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const lowStock  = INVENTORY.filter(i => i.stock < i.min).length;
-  const critical  = INVENTORY.filter(i => i.stock < i.min * 0.5).length;
-  const totalItems = INVENTORY.length;
-  const avgComp   = Math.round(INVENTORY.reduce((s, i) => s + i.compliance, 0) / INVENTORY.length);
+  const filtered = inventory.filter(i => cat === 'All Categories' || i.category === cat);
+
+  const lowStockItems = inventory.filter(i => i.low_stock);
+  const critical      = inventory.filter(i => i.stock < i.min * 0.5).length;
+  const avgComp       = inventory.length ? Math.round(inventory.reduce((s, i) => s + i.compliance, 0) / inventory.length) : 0;
 
   const stockPct = (i) => Math.min(Math.round((i.stock / (i.min * 2)) * 100), 100);
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="sg4">
         {[
-          { label: 'Total PPE Items',    value: totalItems, accent: '#2563eb', sub: 'Categories tracked' },
-          { label: 'Low Stock Items',    value: lowStock,   accent: '#ea580c', sub: 'Below minimum level' },
-          { label: 'Critical Low',       value: critical,   accent: '#dc2626', sub: '<50% of minimum' },
-          { label: 'Avg Compliance',     value: `${avgComp}%`, accent: '#16a34a', sub: 'Worker usage rate' },
+          { label: 'Total PPE Items',    value: counts.total,    accent: '#2563eb', sub: 'Categories tracked' },
+          { label: 'Low Stock Items',    value: counts.low_stock, accent: '#ea580c', sub: 'Below minimum level' },
+          { label: 'Critical Low',       value: critical,         accent: '#dc2626', sub: '<50% of minimum' },
+          { label: 'Avg Compliance',     value: `${avgComp}%`,   accent: '#16a34a', sub: 'Worker usage rate' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />
@@ -58,9 +66,9 @@ const PPETab = () => {
         <div className="acard">
           <div className="ch">
             <h3>Low Stock Alerts</h3>
-            <span className="badge b-red">{lowStock} Items</span>
+            <span className="badge b-red">{lowStockItems.length} Items</span>
           </div>
-          {INVENTORY.filter(i => i.stock < i.min).map(i => (
+          {lowStockItems.map(i => (
             <div key={i.item} className="arow">
               <div className="row-icon" style={{ background: '#fee2e2' }}>
                 <AlertTriangle size={15} color="#dc2626" />
@@ -75,14 +83,14 @@ const PPETab = () => {
               </div>
             </div>
           ))}
-          {lowStock === 0 && <div style={{ padding: 18, textAlign: 'center', color: '#16a34a', fontSize: 12.5 }}>All items above minimum stock levels ✓</div>}
+          {lowStockItems.length === 0 && <div style={{ padding: 18, textAlign: 'center', color: '#16a34a', fontSize: 12.5 }}>All items above minimum stock levels ✓</div>}
         </div>
 
         {/* Compliance by category */}
         <div className="acard">
           <div className="ch"><h3>Compliance by Category</h3></div>
           {['Head','Eye','Respiratory','Hand','Foot','Visibility','Fall Arrest','Hearing'].map(c => {
-            const items = INVENTORY.filter(i => i.category === c);
+            const items = inventory.filter(i => i.category === c);
             if (!items.length) return null;
             const avg = Math.round(items.reduce((s, i) => s + i.compliance, 0) / items.length);
             return (
@@ -120,7 +128,7 @@ const PPETab = () => {
             <tbody>
               {filtered.map(i => {
                 const pct = stockPct(i);
-                const low = i.stock < i.min;
+                const low = i.low_stock;
                 return (
                   <tr key={i.item}>
                     <td style={{ fontWeight: 600, color: '#1e293b' }}>{i.item}</td>
@@ -139,6 +147,9 @@ const PPETab = () => {
                   </tr>
                 );
               })}
+              {filtered.length === 0 && (
+                <tr><td colSpan={9} style={{ textAlign: 'center', color: '#94a3b8', padding: 24 }}>No PPE items found</td></tr>
+              )}
             </tbody>
           </table>
         </div>

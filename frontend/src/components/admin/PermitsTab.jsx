@@ -1,19 +1,9 @@
 /**
  * Permits to Work Tab — PTW authorisation & tracking
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, FileCheck, Clock, CheckCircle } from 'lucide-react';
-
-const PERMITS = [
-  { id: 'PTW-2024-031', type: 'Hot Work',       title: 'Welding repair — Compressor unit C-3',     location: 'Processing Area', issued: '2024-03-14 08:00', expires: '2024-03-14 16:00', issuer: 'S. O\'Brien', worker: 'B. Walsh',    status: 'Active',   risk: 'H' },
-  { id: 'PTW-2024-030', type: 'Confined Space',  title: 'Inspection — Storage tank T-07',           location: 'Tank Farm',       issued: '2024-03-13 07:30', expires: '2024-03-13 15:30', issuer: 'K. Tanaka',  worker: 'T. Reed',    status: 'Closed',   risk: 'C' },
-  { id: 'PTW-2024-029', type: 'Electrical',      title: 'Switchboard maintenance — MCC-2',          location: 'Electrical Room', issued: '2024-03-12 09:00', expires: '2024-03-12 17:00', issuer: 'M. Flores',  worker: 'A. Petrov',  status: 'Closed',   risk: 'H' },
-  { id: 'PTW-2024-028', type: 'Work at Height',  title: 'Roof membrane inspection',                 location: 'Building B Roof', issued: '2024-03-11 07:00', expires: '2024-03-11 13:00', issuer: 'S. O\'Brien', worker: 'J. Williams', status: 'Closed',  risk: 'H' },
-  { id: 'PTW-2024-027', type: 'Excavation',      title: 'Drainage trench — east carpark',           location: 'East Carpark',    issued: '2024-03-10 06:00', expires: '2024-03-12 18:00', issuer: 'M. Flores',  worker: 'P. Mwangi',  status: 'Closed',   risk: 'M' },
-  { id: 'PTW-2024-026', type: 'Hot Work',        title: 'Pipe fabrication — Maintenance bay',       location: 'Maint. Bay',      issued: '2024-03-08 08:00', expires: '2024-03-08 17:00', issuer: 'K. Tanaka',  worker: 'C. Davis',   status: 'Closed',   risk: 'H' },
-  { id: 'PTW-2024-032', type: 'Confined Space',  title: 'Pump sump inspection — PS-02',             location: 'Pump Station',    issued: null,               expires: null,               issuer: 'S. O\'Brien', worker: 'T. Reed',    status: 'Pending',  risk: 'C' },
-  { id: 'PTW-2024-033', type: 'Electrical',      title: 'HV cable termination — Substation 1',      location: 'Substation',      issued: null,               expires: null,               issuer: 'M. Flores',  worker: 'A. Petrov',  status: 'Pending',  risk: 'C' },
-];
+import apiClient from '../../services/api/client';
 
 const TYPES = ['All Types','Hot Work','Confined Space','Electrical','Work at Height','Excavation'];
 const STATUSES = ['All Status','Active','Pending','Closed'];
@@ -27,29 +17,52 @@ const TYPE_COLORS = {
 };
 
 const PermitsTab = () => {
+  const [permits, setPermits] = useState([]);
+  const [counts, setCounts]   = useState({ total: 0, active: 0, pending: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
   const [search, setSearch]   = useState('');
   const [type, setType]       = useState('All Types');
   const [status, setStatus]   = useState('All Status');
 
-  const filtered = PERMITS.filter(p =>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/permits');
+        if (res.data.success) {
+          setPermits(res.data.data);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load permits');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filtered = permits.filter(p =>
     (type   === 'All Types'  || p.type   === type) &&
     (status === 'All Status' || p.status === status) &&
     (search === '' || p.id.includes(search) || p.title.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const active  = PERMITS.filter(p => p.status === 'Active').length;
-  const pending = PERMITS.filter(p => p.status === 'Pending').length;
-  const critical = PERMITS.filter(p => p.risk === 'C').length;
-  const closed  = PERMITS.filter(p => p.status === 'Closed').length;
+  const critical = permits.filter(p => p.risk === 'C').length;
+  const closed   = permits.filter(p => p.status === 'Closed').length;
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="sg4">
         {[
-          { label: 'Active Permits',   value: active,   accent: '#16a34a', sub: 'Currently in progress' },
-          { label: 'Pending Approval', value: pending,  accent: '#f59e0b', sub: 'Awaiting sign-off' },
-          { label: 'Critical Risk',    value: critical, accent: '#dc2626', sub: 'Highest risk category' },
-          { label: 'Closed This Month',value: closed,   accent: '#2563eb', sub: 'Completed permits' },
+          { label: 'Active Permits',   value: counts.active,  accent: '#16a34a', sub: 'Currently in progress' },
+          { label: 'Pending Approval', value: counts.pending, accent: '#f59e0b', sub: 'Awaiting sign-off' },
+          { label: 'Critical Risk',    value: critical,       accent: '#dc2626', sub: 'Highest risk category' },
+          { label: 'Closed This Month',value: closed,         accent: '#2563eb', sub: 'Completed permits' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />

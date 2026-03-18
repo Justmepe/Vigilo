@@ -1,40 +1,50 @@
 /**
  * Inspections Tab — monthly inspection schedule with progress bars
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
-
-const INSPECTIONS = [
-  { id: 'INS-024', name: 'Monthly Fire Safety Inspection',          area: 'All Buildings',     scheduled: '2024-03-01', completed: '2024-03-03', score: 94, status: 'Complete',  inspector: 'S. O\'Brien',  findings: 2, critical: 0 },
-  { id: 'INS-025', name: 'Forklift Pre-start Audit',                area: 'Warehouse',         scheduled: '2024-03-05', completed: '2024-03-05', score: 100,status: 'Complete',  inspector: 'M. Flores',   findings: 0, critical: 0 },
-  { id: 'INS-026', name: 'Chemical Storage & Handling Inspection',  area: 'Chemical Store',    scheduled: '2024-03-08', completed: '2024-03-09', score: 88, status: 'Complete',  inspector: 'K. Tanaka',   findings: 3, critical: 1 },
-  { id: 'INS-027', name: 'Emergency Egress & Exit Inspection',      area: 'All Buildings',     scheduled: '2024-03-12', completed: null,         score: null,status: 'Overdue',   inspector: 'T. Reed',     findings: null, critical: null },
-  { id: 'INS-028', name: 'PPE Inspection & Inventory Check',        area: 'PPE Store',         scheduled: '2024-03-15', completed: null,         score: null,status: 'Overdue',   inspector: 'C. Davis',    findings: null, critical: null },
-  { id: 'INS-029', name: 'Lifting Equipment Annual Inspection',     area: 'Maintenance Bay',   scheduled: '2024-03-20', completed: null,         score: null,status: 'Scheduled', inspector: 'M. Flores',   findings: null, critical: null },
-  { id: 'INS-030', name: 'Workplace Hygiene Inspection',            area: 'Processing Lines',  scheduled: '2024-03-22', completed: null,         score: null,status: 'Scheduled', inspector: 'R. Singh',    findings: null, critical: null },
-  { id: 'INS-031', name: 'Electrical Safety Audit',                 area: 'All Switchboards',  scheduled: '2024-03-28', completed: null,         score: null,status: 'Scheduled', inspector: 'A. Petrov',   findings: null, critical: null },
-  { id: 'INS-032', name: 'Monthly Hygiene Inspection (all areas)',  area: 'All Areas',         scheduled: '2024-03-30', completed: null,         score: null,status: 'Scheduled', inspector: 'J. Williams', findings: null, critical: null },
-];
+import apiClient from '../../services/api/client';
 
 const STATUSES = ['All Status','Complete','Overdue','Scheduled'];
 
 const InspectionsTab = () => {
-  const [status, setStatus] = useState('All Status');
+  const [inspections, setInspections] = useState([]);
+  const [counts, setCounts]           = useState({ complete: 0, overdue: 0, scheduled: 0, avgScore: 0 });
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState(null);
+  const [status, setStatus]           = useState('All Status');
 
-  const filtered = INSPECTIONS.filter(i => status === 'All Status' || i.status === status);
-  const complete = INSPECTIONS.filter(i => i.status === 'Complete').length;
-  const overdue  = INSPECTIONS.filter(i => i.status === 'Overdue').length;
-  const sched    = INSPECTIONS.filter(i => i.status === 'Scheduled').length;
-  const avgScore = Math.round(INSPECTIONS.filter(i => i.score).reduce((s, i) => s + i.score, 0) / INSPECTIONS.filter(i => i.score).length);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/inspection-schedule');
+        if (res.data.success) {
+          setInspections(res.data.data);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load inspections');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filtered = inspections.filter(i => status === 'All Status' || i.status === status);
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="sg4">
         {[
-          { label: 'Completed MTD',  value: complete, accent: '#16a34a', sub: `of ${INSPECTIONS.length} scheduled` },
-          { label: 'Overdue',        value: overdue,  accent: '#dc2626', sub: 'Require completion' },
-          { label: 'Scheduled',      value: sched,    accent: '#2563eb', sub: 'Upcoming this month' },
-          { label: 'Avg Score',      value: `${avgScore}%`, accent: '#7c3aed', sub: 'Completed inspections' },
+          { label: 'Completed MTD',  value: counts.complete,          accent: '#16a34a', sub: `of ${inspections.length} scheduled` },
+          { label: 'Overdue',        value: counts.overdue,           accent: '#dc2626', sub: 'Require completion' },
+          { label: 'Scheduled',      value: counts.scheduled,         accent: '#2563eb', sub: 'Upcoming this month' },
+          { label: 'Avg Score',      value: `${counts.avgScore}%`,    accent: '#7c3aed', sub: 'Completed inspections' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />
@@ -48,11 +58,11 @@ const InspectionsTab = () => {
       {/* Month progress */}
       <div className="acard">
         <div className="ch">
-          <h3>March 2024 — Inspection Programme</h3>
+          <h3>Inspection Programme</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 11.5, color: '#64748b' }}>{complete}/{INSPECTIONS.length} complete</span>
+            <span style={{ fontSize: 11.5, color: '#64748b' }}>{counts.complete}/{inspections.length} complete</span>
             <div style={{ width: 100 }} className="progress-bar">
-              <div className="progress-fill" style={{ width: `${Math.round(complete/INSPECTIONS.length*100)}%`, background: '#16a34a' }} />
+              <div className="progress-fill" style={{ width: `${inspections.length ? Math.round(counts.complete/inspections.length*100) : 0}%`, background: '#16a34a' }} />
             </div>
           </div>
         </div>
@@ -103,6 +113,9 @@ const InspectionsTab = () => {
               </div>
             </div>
           ))}
+          {filtered.length === 0 && (
+            <div style={{ textAlign: 'center', color: '#94a3b8', padding: 24 }}>No inspections found</div>
+          )}
         </div>
       </div>
     </div>

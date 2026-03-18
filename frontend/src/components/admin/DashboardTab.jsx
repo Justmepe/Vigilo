@@ -1,36 +1,16 @@
 /**
  * EHS Dashboard Tab — live safety overview with stats, alerts, heatmap, timeline
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Clock, Phone, Radio } from 'lucide-react';
+import apiClient from '../../services/api/client';
 
-const STATS = [
-  { label: 'Days Without Incident', value: '47', sub: '+3 from last week', subClass: 'up', accent: '#16a34a' },
-  { label: 'Open Action Items',     value: '12', sub: '3 overdue',         subClass: 'dn', accent: '#ea580c' },
-  { label: 'Workers on Site',       value: '84', sub: '6 shifts active',   subClass: '',   accent: '#1d4ed8' },
-  { label: 'Training Compliance',   value: '91%', sub: '↑ 4% this month',  subClass: 'up', accent: '#7c3aed' },
-];
-
-const ALERTS = [
-  { id: 1, type: 'critical', icon: AlertTriangle, color: '#dc2626', bg: '#fee2e2', text: 'Hot work permit PTW-2024-031 expires in 2 hours', time: '14:22' },
-  { id: 2, type: 'warning',  icon: Clock,         color: '#ea580c', bg: '#ffedd5', text: 'Forklift inspection overdue — Unit FL-04, Bay 3',  time: '09:15' },
-  { id: 3, type: 'warning',  icon: AlertTriangle, color: '#f59e0b', bg: '#fef3c7', text: '3 workers with expired H2S certification',          time: 'Yesterday' },
-];
-
-const CHECKLIST = [
-  { id: 1, text: 'Morning safety briefing — Day shift', done: true  },
-  { id: 2, text: 'Fire extinguisher check — Building A', done: true  },
+const CHECKLIST_DEFAULT = [
+  { id: 1, text: 'Morning safety briefing — Day shift', done: false },
+  { id: 2, text: 'Fire extinguisher check — Building A', done: false },
   { id: 3, text: 'Forklift pre-start inspection', done: false },
   { id: 4, text: 'Hazardous materials storage audit',   done: false },
   { id: 5, text: 'Emergency exit walkthrough',          done: false },
-];
-
-const TIMELINE = [
-  { color: '#dc2626', time: '14:32', title: 'Near Miss Reported', sub: 'Loading dock — slip hazard identified, J. Williams' },
-  { color: '#16a34a', time: '11:45', title: 'PTW Issued',         sub: 'Hot work permit #031 — Processing area' },
-  { color: '#2563eb', time: '09:00', title: 'Toolbox Talk',       sub: '17 workers attended — Heat stress awareness' },
-  { color: '#f59e0b', time: '08:15', title: 'Action Closed',      sub: 'ACT-089 — Spill kit restocked, verified by T. Reed' },
-  { color: '#7c3aed', time: 'Yest.', title: 'Inspection Complete',sub: 'Monthly fire safety — 94% compliance score' },
 ];
 
 // 7×5 heatmap grid (Mon–Sun, last 5 weeks)
@@ -40,16 +20,51 @@ const HEATMAP = Array.from({ length: 35 }, (_, i) => {
 });
 const DAYS = ['M','T','W','T','F','S','S'];
 
+const ALERT_ICON_MAP = { action: Clock, incident: AlertTriangle, permit: AlertTriangle };
+
 const DashboardTab = () => {
-  const [checks, setChecks] = useState(CHECKLIST);
+  const [stats, setStats]   = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState(null);
+  const [checks, setChecks] = useState(CHECKLIST_DEFAULT);
   const toggle = id => setChecks(prev => prev.map(c => c.id === id ? { ...c, done: !c.done } : c));
   const done = checks.filter(c => c.done).length;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/ehs-dashboard/stats');
+        if (res.data.success !== false) {
+          const d = res.data;
+          setStats(d);
+          setAlerts(d.recent_alerts || []);
+        }
+      } catch (err) {
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
+
+  const STATS_CARDS = stats ? [
+    { label: 'Days Without Incident', value: String(stats.days_without_incident ?? '—'), sub: 'No LTI',             subClass: 'up', accent: '#16a34a' },
+    { label: 'Open Action Items',     value: String(stats.open_actions ?? '—'),           sub: `${stats.overdue_actions ?? 0} overdue`, subClass: stats.overdue_actions > 0 ? 'dn' : '', accent: '#ea580c' },
+    { label: 'Workers on Site',       value: String(stats.workers_on_site ?? '—'),        sub: 'Active permits',    subClass: '',   accent: '#1d4ed8' },
+    { label: 'Training Compliance',   value: `${stats.training_compliance_pct ?? '—'}%`,  sub: 'Active workers',    subClass: 'up', accent: '#7c3aed' },
+  ] : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Stat cards */}
       <div className="sg4">
-        {STATS.map((s, i) => (
+        {STATS_CARDS.map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />
             <div className="stat-lbl">{s.label}</div>
@@ -65,22 +80,31 @@ const DashboardTab = () => {
         <div className="acard">
           <div className="ch">
             <h3>Active Alerts</h3>
-            <span className="badge b-red">{ALERTS.length} Active</span>
+            <span className="badge b-red">{alerts.length} Active</span>
           </div>
-          {ALERTS.map(a => (
-            <div key={a.id} className="arow">
-              <div className="row-icon" style={{ background: a.bg }}>
-                <a.icon size={15} color={a.color} />
+          {alerts.map((a, idx) => {
+            const IconComp = ALERT_ICON_MAP[a.alert_type] || AlertTriangle;
+            const isCritical = a.level === 'critical';
+            const color = isCritical ? '#dc2626' : a.level === 'warning' ? '#ea580c' : '#f59e0b';
+            const bg    = isCritical ? '#fee2e2' : a.level === 'warning' ? '#ffedd5' : '#fef3c7';
+            return (
+              <div key={idx} className="arow">
+                <div className="row-icon" style={{ background: bg }}>
+                  <IconComp size={15} color={color} />
+                </div>
+                <div className="row-main">
+                  <div className="row-title">{a.text}</div>
+                  <div className="row-meta">{a.ref}</div>
+                </div>
+                <span className={`badge ${isCritical ? 'b-red' : 'b-amber'}`}>
+                  {isCritical ? 'Critical' : 'Warning'}
+                </span>
               </div>
-              <div className="row-main">
-                <div className="row-title">{a.text}</div>
-                <div className="row-meta">{a.time}</div>
-              </div>
-              <span className={`badge ${a.type === 'critical' ? 'b-red' : 'b-amber'}`}>
-                {a.type === 'critical' ? 'Critical' : 'Warning'}
-              </span>
-            </div>
-          ))}
+            );
+          })}
+          {alerts.length === 0 && (
+            <div style={{ padding: 18, textAlign: 'center', color: '#16a34a', fontSize: 12.5 }}>No active alerts ✓</div>
+          )}
         </div>
 
         {/* Incident heatmap */}
@@ -109,21 +133,18 @@ const DashboardTab = () => {
 
       {/* Row 3 */}
       <div className="sg2">
-        {/* Timeline */}
+        {/* Stats summary row */}
         <div className="acard">
-          <div className="ch"><h3>Recent Activity</h3></div>
-          <div className="timeline">
-            {TIMELINE.map((t, i) => (
-              <div key={i} className="tl-item">
-                <div style={{ position: 'relative' }}>
-                  <div className="tl-dot" style={{ background: t.color }} />
-                  {i < TIMELINE.length - 1 && <div className="tl-line" />}
-                </div>
-                <div className="tl-content">
-                  <div className="tl-time">{t.time}</div>
-                  <div className="tl-text">{t.title}</div>
-                  <div className="tl-sub">{t.sub}</div>
-                </div>
+          <div className="ch"><h3>Month Summary</h3></div>
+          <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {stats && [
+              { label: 'Incidents MTD',   value: stats.incidents_mtd ?? '—',   color: '#ea580c' },
+              { label: 'Active Permits',  value: stats.active_permits ?? '—',  color: '#16a34a' },
+              { label: 'Overdue Actions', value: stats.overdue_actions ?? '—', color: '#dc2626' },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '6px 0', borderBottom: '0.5px solid #f1f5f9' }}>
+                <span style={{ color: '#475569' }}>{item.label}</span>
+                <span style={{ fontWeight: 700, color: item.color }}>{item.value}</span>
               </div>
             ))}
           </div>

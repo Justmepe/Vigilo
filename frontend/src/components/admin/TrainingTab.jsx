@@ -1,21 +1,9 @@
 /**
  * Training Matrix Tab — competency & certification tracking
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Download, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
-
-const WORKERS = [
-  { name: 'J. Williams', role: 'Line Lead',     certs: { h2s: 'valid', fa: 'valid',    forklift: 'valid',  confined: 'exp3',  fire: 'valid', wah: null,     loto: 'valid'  } },
-  { name: 'T. Reed',     role: 'Maintenance',   certs: { h2s: 'valid', fa: 'valid',    forklift: null,     confined: 'valid', fire: 'valid', wah: 'valid',  loto: 'valid'  } },
-  { name: 'M. Flores',   role: 'Supervisor',    certs: { h2s: 'valid', fa: 'valid',    forklift: 'valid',  confined: 'valid', fire: 'valid', wah: 'valid',  loto: 'valid'  } },
-  { name: 'K. Tanaka',   role: 'EHS Officer',   certs: { h2s: 'exp1', fa: 'valid',    forklift: null,     confined: 'valid', fire: 'valid', wah: 'valid',  loto: 'valid'  } },
-  { name: 'C. Davis',    role: 'Operator',      certs: { h2s: 'exp1', fa: 'exp2',     forklift: 'valid',  confined: null,    fire: 'valid', wah: null,     loto: 'valid'  } },
-  { name: 'R. Singh',    role: 'Operator',      certs: { h2s: 'exp1', fa: 'valid',    forklift: null,     confined: null,    fire: 'valid', wah: null,     loto: null     } },
-  { name: 'S. O\'Brien', role: 'Safety Officer', certs: { h2s: 'valid', fa: 'valid',   forklift: null,     confined: 'valid', fire: 'valid', wah: 'valid',  loto: 'valid'  } },
-  { name: 'A. Petrov',   role: 'Operator',      certs: { h2s: 'valid', fa: 'valid',    forklift: 'valid',  confined: null,    fire: null,    wah: null,     loto: null     } },
-  { name: 'L. Nguyen',   role: 'Line Lead',     certs: { h2s: 'valid', fa: 'valid',    forklift: 'valid',  confined: 'exp3',  fire: 'valid', wah: null,     loto: 'valid'  } },
-  { name: 'P. Mwangi',   role: 'Operator',      certs: { h2s: null,    fa: 'valid',    forklift: null,     confined: null,    fire: 'valid', wah: null,     loto: null     } },
-];
+import apiClient from '../../services/api/client';
 
 const CERT_COLS = [
   { key: 'h2s',      label: 'H2S',           required: ['Line Lead','Operator','Maintenance','Safety Officer','EHS Officer','Supervisor'] },
@@ -50,19 +38,43 @@ const compliance = (w) => {
 };
 
 const TrainingTab = () => {
-  const [search, setSearch] = useState('');
-  const filtered = WORKERS.filter(w => w.name.toLowerCase().includes(search.toLowerCase()) || w.role.toLowerCase().includes(search.toLowerCase()));
+  const [workers, setWorkers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+  const [search, setSearch]   = useState('');
 
-  const expiring30  = WORKERS.flatMap(w => CERT_COLS.filter(c => w.certs[c.key] === 'exp1')).length;
-  const expiring60  = WORKERS.flatMap(w => CERT_COLS.filter(c => w.certs[c.key] === 'exp2')).length;
-  const missing     = WORKERS.flatMap(w => CERT_COLS.filter(c => c.required.includes(w.role) && !w.certs[c.key])).length;
-  const avgComp     = Math.round(WORKERS.reduce((s, w) => s + compliance(w), 0) / WORKERS.length);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/training/matrix');
+        if (res.data.success) {
+          setWorkers(res.data.data);
+        }
+      } catch (err) {
+        setError('Failed to load training matrix');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filtered = workers.filter(w => w.worker_name.toLowerCase().includes(search.toLowerCase()) || w.role.toLowerCase().includes(search.toLowerCase()));
+
+  const expiring30  = workers.flatMap(w => CERT_COLS.filter(c => w.certs[c.key] === 'exp1')).length;
+  const expiring60  = workers.flatMap(w => CERT_COLS.filter(c => w.certs[c.key] === 'exp2')).length;
+  const missing     = workers.flatMap(w => CERT_COLS.filter(c => c.required.includes(w.role) && !w.certs[c.key])).length;
+  const avgComp     = workers.length ? Math.round(workers.reduce((s, w) => s + compliance(w), 0) / workers.length) : 0;
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="sg4">
         {[
-          { label: 'Overall Compliance', value: `${avgComp}%`, accent: avgComp >= 90 ? '#16a34a' : '#ea580c', sub: `${WORKERS.length} workers tracked` },
+          { label: 'Overall Compliance', value: `${avgComp}%`, accent: avgComp >= 90 ? '#16a34a' : '#ea580c', sub: `${workers.length} workers tracked` },
           { label: 'Certs Expiring <30d', value: expiring30, accent: '#dc2626', sub: 'Urgent renewal needed' },
           { label: 'Certs Expiring <60d', value: expiring60, accent: '#f59e0b', sub: 'Plan renewal now' },
           { label: 'Missing Required',    value: missing,    accent: '#7c3aed', sub: 'Certs not yet held' },
@@ -111,8 +123,8 @@ const TrainingTab = () => {
               {filtered.map(w => {
                 const comp = compliance(w);
                 return (
-                  <tr key={w.name}>
-                    <td style={{ fontWeight: 600, color: '#1e293b' }}>{w.name}</td>
+                  <tr key={w.worker_name}>
+                    <td style={{ fontWeight: 600, color: '#1e293b' }}>{w.worker_name}</td>
                     <td><span className="badge b-gray">{w.role}</span></td>
                     {CERT_COLS.map(c => (
                       <td key={c.key} style={{ textAlign: 'center' }}>
@@ -130,6 +142,9 @@ const TrainingTab = () => {
                   </tr>
                 );
               })}
+              {filtered.length === 0 && (
+                <tr><td colSpan={CERT_COLS.length + 3} style={{ textAlign: 'center', color: '#94a3b8', padding: 24 }}>No workers found</td></tr>
+              )}
             </tbody>
           </table>
         </div>

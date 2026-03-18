@@ -3,7 +3,7 @@ const router = express.Router();
 
 console.log('[ROUTES] Loading route files...');
 
-let authRoutes, jsaRoutes, lotoRoutes, injuryRoutes, accidentRoutes, spillRoutes, inspectionRoutes, facilityRoutes, equipmentRoutes, auditRoutes, adminRoutes;
+let authRoutes, jsaRoutes, lotoRoutes, injuryRoutes, accidentRoutes, spillRoutes, inspectionRoutes, facilityRoutes, equipmentRoutes, auditRoutes, adminRoutes, ehsRoutes;
 
 try {
   authRoutes = require('./auth.routes');
@@ -28,6 +28,8 @@ try {
   console.log('[ROUTES] audit.routes loaded');
   adminRoutes = require('./admin.routes');
   console.log('[ROUTES] admin.routes loaded');
+  ehsRoutes = require('./ehs.routes');
+  console.log('[ROUTES] ehs.routes loaded');
 
 } catch (err) {
   console.error('[ROUTES] ERROR loading route:', err.message);
@@ -66,6 +68,7 @@ router.use('/facilities', facilityRoutes);
 router.use('/equipment', equipmentRoutes);
 router.use('/audit', auditRoutes);
 router.use('/admin', adminRoutes);
+router.use('/ehs', ehsRoutes);
 
 // Photo upload endpoint - accepts both 'photos' and 'files' field names
 router.post('/uploads/photos', 

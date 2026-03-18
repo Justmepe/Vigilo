@@ -1,19 +1,9 @@
 /**
  * Risk Register Tab — hazard identification, likelihood × severity matrix
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Download } from 'lucide-react';
-
-const RISKS = [
-  { id: 'RSK-001', hazard: 'Chemical Exposure — H2S gas in confined spaces', category: 'Chemical',   likelihood: 3, severity: 5, residual: 'H', control: 'Gas detection, PPE, buddy system, rescue plan', owner: 'K. Tanaka',  review: '2024-04-01', status: 'Active'   },
-  { id: 'RSK-002', hazard: 'Working at Height — mezzanine & elevated platforms', category: 'Physical',   likelihood: 2, severity: 4, residual: 'H', control: 'Fall arrest harness, edge protection, TAPS permit', owner: 'M. Flores',  review: '2024-04-15', status: 'Active'   },
-  { id: 'RSK-003', hazard: 'Forklift/Pedestrian Interaction',                   category: 'Traffic',    likelihood: 3, severity: 4, residual: 'H', control: 'Segregated walkways, speed limit 5km/h, spotters', owner: 'J. Williams', review: '2024-03-20', status: 'Overdue'  },
-  { id: 'RSK-004', hazard: 'Electrical — live equipment maintenance',            category: 'Electrical', likelihood: 2, severity: 5, residual: 'M', control: 'LOTO procedure, qualified electricians only',      owner: 'T. Reed',     review: '2024-05-01', status: 'Active'   },
-  { id: 'RSK-005', hazard: 'Manual Handling — bulk bag lifting operations',      category: 'Ergonomic',  likelihood: 4, severity: 2, residual: 'M', control: 'Mechanical aids, max 15kg manual, team lifts',    owner: 'C. Davis',    review: '2024-04-10', status: 'Active'   },
-  { id: 'RSK-006', hazard: 'Spill / Environmental — fuel storage tank farm',     category: 'Environmental', likelihood: 2, severity: 3, residual: 'M', control: 'Secondary containment, spill kits, weekly checks', owner: 'R. Singh',    review: '2024-05-15', status: 'Active'   },
-  { id: 'RSK-007', hazard: 'Noise — grinding and cutting operations',            category: 'Physical',   likelihood: 5, severity: 2, residual: 'L', control: 'Mandatory hearing protection zone, audiometry',    owner: 'A. Petrov',   review: '2024-06-01', status: 'Controlled'},
-  { id: 'RSK-008', hazard: 'Fire — welding and hot work near combustibles',      category: 'Fire',       likelihood: 2, severity: 5, residual: 'H', control: 'PTW system, fire watch, 10m clearance radius',    owner: 'S. O\'Brien',  review: '2024-04-05', status: 'Active'   },
-];
+import apiClient from '../../services/api/client';
 
 // 5×5 risk matrix colours
 const MATRIX_COLOR = [
@@ -28,28 +18,53 @@ const CATS = ['All Categories','Chemical','Physical','Traffic','Electrical','Erg
 const STATUSES = ['All Status','Active','Controlled','Overdue'];
 
 const RiskTab = () => {
-  const [search, setSearch] = useState('');
-  const [cat, setCat]       = useState('All Categories');
-  const [status, setStatus] = useState('All Status');
+  const [risks, setRisks]     = useState([]);
+  const [counts, setCounts]   = useState({ total: 0, active: 0, high: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+  const [search, setSearch]   = useState('');
+  const [cat, setCat]         = useState('All Categories');
+  const [status, setStatus]   = useState('All Status');
   const [highlight, setHighlight] = useState(null); // {l, s}
 
-  const filtered = RISKS.filter(r =>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/risks');
+        if (res.data.success) {
+          setRisks(res.data.data);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load risk register');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filtered = risks.filter(r =>
     (cat    === 'All Categories' || r.category === cat) &&
     (status === 'All Status'     || r.status   === status) &&
     (search === '' || r.hazard.toLowerCase().includes(search.toLowerCase()) || r.id.includes(search))
   );
 
-  const score = r => r.likelihood * r.severity;
+  const score = r => r.risk_score !== undefined ? r.risk_score : r.likelihood * r.severity_level;
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Summary */}
       <div className="sg4">
         {[
-          { label: 'Total Risks',   value: RISKS.length,                          accent: '#2563eb', sub: 'Registered hazards' },
-          { label: 'High / Critical', value: RISKS.filter(r=>['C','H'].includes(r.residual)).length, accent: '#dc2626', sub: 'Require action' },
-          { label: 'Overdue Review', value: RISKS.filter(r=>r.status==='Overdue').length,  accent: '#ea580c', sub: 'Past review date' },
-          { label: 'Controlled',    value: RISKS.filter(r=>r.status==='Controlled').length, accent: '#16a34a', sub: 'Residual low risk' },
+          { label: 'Total Risks',     value: counts.total,                                                  accent: '#2563eb', sub: 'Registered hazards' },
+          { label: 'High / Critical', value: risks.filter(r=>['C','H'].includes(r.residual)).length,        accent: '#dc2626', sub: 'Require action' },
+          { label: 'Overdue Review',  value: risks.filter(r=>r.status==='Overdue').length,                  accent: '#ea580c', sub: 'Past review date' },
+          { label: 'Controlled',      value: risks.filter(r=>r.status==='Controlled').length,               accent: '#16a34a', sub: 'Residual low risk' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />
@@ -75,8 +90,8 @@ const RiskTab = () => {
               <div key={sev} style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
                 <div style={{ width: 70, fontSize: 10, color: '#64748b', fontWeight: 700, display: 'flex', alignItems: 'center' }}>S{sev}</div>
                 {[1,2,3,4,5].map(lik => {
-                  const score = lik * sev;
-                  const count = RISKS.filter(r => r.likelihood === lik && r.severity === sev).length;
+                  const cellScore = lik * sev;
+                  const count = risks.filter(r => r.likelihood === lik && (r.severity_level || r.severity) === sev).length;
                   return (
                     <div key={lik} style={{
                       flex: 1, aspectRatio: '1', borderRadius: 5, background: MATRIX_COLOR[5-sev][lik-1],
@@ -85,7 +100,7 @@ const RiskTab = () => {
                       cursor: count ? 'pointer' : 'default', border: highlight?.l===lik&&highlight?.s===sev ? '2px solid #1d4ed8' : '1px solid rgba(0,0,0,0.04)',
                     }} onClick={() => setHighlight(count && (highlight?.l===lik&&highlight?.s===sev) ? null : count ? {l:lik,s:sev} : null)}
                     role="button" tabIndex={count ? 0 : -1} onKeyDown={e => e.key === 'Enter' && count && setHighlight(highlight?.l===lik&&highlight?.s===sev ? null : {l:lik,s:sev})}>
-                      {count || score}
+                      {count || cellScore}
                     </div>
                   );
                 })}
@@ -106,8 +121,8 @@ const RiskTab = () => {
         <div className="acard">
           <div className="ch"><h3>Risks by Category</h3></div>
           {['Chemical','Physical','Traffic','Electrical','Ergonomic','Environmental','Fire'].map(c => {
-            const count = RISKS.filter(r => r.category === c).length;
-            const pct = Math.round((count / RISKS.length) * 100);
+            const count = risks.filter(r => r.category === c).length;
+            const pct = risks.length ? Math.round((count / risks.length) * 100) : 0;
             return (
               <div key={c} style={{ padding: '8px 18px', borderBottom: '0.5px solid #f8fafc' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12.5 }}>
@@ -159,7 +174,7 @@ const RiskTab = () => {
                   <td style={{ maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={r.hazard}>{r.hazard}</td>
                   <td><span className="badge b-purple">{r.category}</span></td>
                   <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.likelihood}</td>
-                  <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.severity}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 700 }}>{r.severity_level || r.severity}</td>
                   <td style={{ textAlign: 'center' }}><span style={{ fontWeight: 800, color: score(r) >= 15 ? '#dc2626' : score(r) >= 9 ? '#ea580c' : '#16a34a' }}>{score(r)}</span></td>
                   <td><span className={`risk-pill risk-${r.residual}`}>{r.residual === 'C' ? 'Critical' : r.residual === 'H' ? 'High' : r.residual === 'M' ? 'Medium' : 'Low'}</span></td>
                   <td>{r.owner}</td>
@@ -167,6 +182,9 @@ const RiskTab = () => {
                   <td><span className={`badge ${r.status === 'Controlled' ? 'b-green' : r.status === 'Overdue' ? 'b-red' : 'b-blue'}`}>{r.status}</span></td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr><td colSpan={10} style={{ textAlign: 'center', color: '#94a3b8', padding: 24 }}>No risks match the current filters</td></tr>
+              )}
             </tbody>
           </table>
         </div>

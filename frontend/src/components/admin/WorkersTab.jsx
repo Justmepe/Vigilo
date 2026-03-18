@@ -1,37 +1,9 @@
 /**
  * Workers on Site Tab — shift roster, check-in log, PPE compliance
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
-
-const SHIFTS = [
-  {
-    name: 'Day Shift', time: '06:00 – 14:00', supervisor: 'M. Flores',
-    workers: [
-      { name: 'J. Williams', role: 'Line Lead',   area: 'Processing Line 1', checkin: '05:52', ppe: true,  status: 'On Site'  },
-      { name: 'C. Davis',    role: 'Operator',    area: 'Processing Line 1', checkin: '05:58', ppe: true,  status: 'On Site'  },
-      { name: 'R. Singh',    role: 'Operator',    area: 'Processing Line 2', checkin: '06:05', ppe: false, status: 'On Site'  },
-      { name: 'L. Nguyen',   role: 'Line Lead',   area: 'Processing Line 2', checkin: '05:55', ppe: true,  status: 'On Site'  },
-      { name: 'P. Mwangi',   role: 'Operator',    area: 'Warehouse',         checkin: '06:10', ppe: true,  status: 'On Site'  },
-      { name: 'B. Walsh',    role: 'Maintenance', area: 'Processing Area',   checkin: '07:30', ppe: true,  status: 'On Site'  },
-    ],
-  },
-  {
-    name: 'Afternoon Shift', time: '14:00 – 22:00', supervisor: 'T. Reed',
-    workers: [
-      { name: 'K. Tanaka',   role: 'EHS Officer', area: 'All Areas',         checkin: '13:45', ppe: true,  status: 'On Site'  },
-      { name: 'A. Petrov',   role: 'Operator',    area: 'Processing Line 1', checkin: null,    ppe: null,  status: 'Expected' },
-      { name: 'D. Kim',      role: 'Operator',    area: 'Processing Line 2', checkin: null,    ppe: null,  status: 'Expected' },
-    ],
-  },
-  {
-    name: 'Night Shift', time: '22:00 – 06:00', supervisor: 'S. O\'Brien',
-    workers: [
-      { name: 'F. Okafor',   role: 'Operator',    area: 'Processing Line 1', checkin: null,    ppe: null,  status: 'Scheduled'},
-      { name: 'G. Bravo',    role: 'Operator',    area: 'Warehouse',         checkin: null,    ppe: null,  status: 'Scheduled'},
-    ],
-  },
-];
+import apiClient from '../../services/api/client';
 
 const VISITORS = [
   { name: 'Dr. I. Park',     company: 'WorkSafe Inspector', purpose: 'Annual compliance audit', checkin: '09:00', checkout: null,    host: 'S. O\'Brien', badge: 'V-041' },
@@ -41,22 +13,49 @@ const VISITORS = [
 const STATUS_COLOR = { 'On Site': '#16a34a', 'Expected': '#f59e0b', 'Scheduled': '#2563eb' };
 
 const WorkersTab = () => {
+  const [shifts, setShifts]     = useState([]);
+  const [counts, setCounts]     = useState({ total: 0, on_site: 0 });
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(null);
   const [activeShift, setActiveShift] = useState(0);
-  const shift = SHIFTS[activeShift];
-  const onSite = SHIFTS.flatMap(s => s.workers).filter(w => w.status === 'On Site').length;
-  const total  = SHIFTS.flatMap(s => s.workers).length + VISITORS.length;
-  const noPPE  = SHIFTS.flatMap(s => s.workers).filter(w => w.status === 'On Site' && w.ppe === false).length;
-  const ppeComp = Math.round((SHIFTS.flatMap(s => s.workers).filter(w => w.status === 'On Site' && w.ppe === true).length /
-    Math.max(1, SHIFTS.flatMap(s => s.workers).filter(w => w.status === 'On Site').length)) * 100);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/attendance/today');
+        if (res.data.success) {
+          setShifts(res.data.shifts);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load attendance data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
+
+  const shift  = shifts[activeShift] || { workers: [] };
+  const allWorkers = shifts.flatMap(s => s.workers || []);
+  const noPPE  = allWorkers.filter(w => w.status === 'On Site' && w.ppe === false).length;
+  const onSiteWorkers = allWorkers.filter(w => w.status === 'On Site');
+  const ppeComp = onSiteWorkers.length
+    ? Math.round((onSiteWorkers.filter(w => w.ppe === true).length / onSiteWorkers.length) * 100)
+    : 100;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="sg4">
         {[
-          { label: 'Currently on Site', value: onSite,   accent: '#16a34a', sub: `${total} total incl. expected` },
-          { label: 'Active Shifts',     value: SHIFTS.length, accent: '#2563eb', sub: '3 shifts today' },
-          { label: 'PPE Compliance',    value: `${ppeComp}%`, accent: ppeComp === 100 ? '#16a34a' : '#ea580c', sub: 'Checked workers' },
-          { label: 'PPE Non-Compliance',value: noPPE,    accent: '#dc2626', sub: 'Workers without PPE' },
+          { label: 'Currently on Site', value: counts.on_site,   accent: '#16a34a', sub: `${counts.total} total incl. expected` },
+          { label: 'Active Shifts',     value: shifts.length,    accent: '#2563eb', sub: `${shifts.length} shifts today` },
+          { label: 'PPE Compliance',    value: `${ppeComp}%`,    accent: ppeComp === 100 ? '#16a34a' : '#ea580c', sub: 'Checked workers' },
+          { label: 'PPE Non-Compliance',value: noPPE,            accent: '#dc2626', sub: 'Workers without PPE' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />
@@ -73,18 +72,18 @@ const WorkersTab = () => {
           <div className="ch">
             <h3>Shift Roster</h3>
             <div style={{ display: 'flex', gap: 4 }}>
-              {SHIFTS.map((s, i) => (
+              {shifts.map((s, i) => (
                 <button key={i} className={`mini-btn${activeShift === i ? ' green' : ''}`} onClick={() => setActiveShift(i)}>
-                  {s.name.split(' ')[0]}
+                  {s.shift_name.split(' ')[0]}
                 </button>
               ))}
             </div>
           </div>
           <div style={{ padding: '10px 18px', borderBottom: '0.5px solid #f1f5f9' }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1e293b' }}>{shift.name}</div>
-            <div style={{ fontSize: 11, color: '#94a3b8' }}>{shift.time} · Supervisor: {shift.supervisor}</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1e293b' }}>{shift.shift_name}</div>
+            <div style={{ fontSize: 11, color: '#94a3b8' }}>Supervisor: {shift.supervisor}</div>
           </div>
-          {shift.workers.map((w, i) => (
+          {(shift.workers || []).map((w, i) => (
             <div key={i} className="arow">
               <div className="avatar" style={{
                 background: w.status === 'On Site' ? '#dcfce7' : '#f1f5f9',
@@ -107,6 +106,9 @@ const WorkersTab = () => {
               </div>
             </div>
           ))}
+          {shift.workers && shift.workers.length === 0 && (
+            <div style={{ padding: 18, textAlign: 'center', color: '#94a3b8', fontSize: 12.5 }}>No workers on this shift</div>
+          )}
         </div>
 
         {/* Visitors + site summary */}
@@ -114,20 +116,24 @@ const WorkersTab = () => {
           {/* Site total visual */}
           <div className="acard" style={{ padding: 16 }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1e293b', marginBottom: 12 }}>Site Headcount</div>
-            {SHIFTS.map((s, i) => (
-              <div key={i} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12 }}>
-                  <span style={{ color: '#475569' }}>{s.name}</span>
-                  <span style={{ fontWeight: 700 }}>{s.workers.filter(w => w.status === 'On Site').length}/{s.workers.length}</span>
+            {shifts.map((s, i) => {
+              const workers = s.workers || [];
+              const onSite = workers.filter(w => w.status === 'On Site').length;
+              return (
+                <div key={i} style={{ marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12 }}>
+                    <span style={{ color: '#475569' }}>{s.shift_name}</span>
+                    <span style={{ fontWeight: 700 }}>{onSite}/{workers.length}</span>
+                  </div>
+                  <div className="progress-bar" style={{ marginTop: 0 }}>
+                    <div className="progress-fill" style={{
+                      width: `${workers.length ? Math.round(onSite/workers.length*100) : 0}%`,
+                      background: '#2563eb',
+                    }} />
+                  </div>
                 </div>
-                <div className="progress-bar" style={{ marginTop: 0 }}>
-                  <div className="progress-fill" style={{
-                    width: `${Math.round(s.workers.filter(w=>w.status==='On Site').length/s.workers.length*100)}%`,
-                    background: '#2563eb',
-                  }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
             <div style={{ borderTop: '0.5px solid #f1f5f9', paddingTop: 10, marginTop: 4, display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
               <span style={{ color: '#475569' }}>Visitors on site</span>
               <span style={{ fontWeight: 700 }}>{VISITORS.filter(v => !v.checkout).length}</span>

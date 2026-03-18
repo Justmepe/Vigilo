@@ -1,19 +1,9 @@
 /**
  * Incidents Tab — incident log with INC-xxx IDs, severity, AI indicator
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, FileText, Download } from 'lucide-react';
-
-const INCIDENTS = [
-  { id: 'INC-2024-047', date: '2024-03-14', type: 'Near Miss',       severity: 'M', location: 'Loading Dock B',   description: 'Slip hazard — water accumulation near forklift path',                    reporter: 'J. Williams',  status: 'Investigating', ai: true  },
-  { id: 'INC-2024-046', date: '2024-03-12', type: 'First Aid',       severity: 'L', location: 'Processing Line 2', description: 'Minor laceration from packaging material, treated on-site',              reporter: 'T. Reed',      status: 'Closed',        ai: true  },
-  { id: 'INC-2024-045', date: '2024-03-10', type: 'Property Damage', severity: 'M', location: 'Warehouse Bay 3',   description: 'Forklift FL-04 struck racking — no injuries, structural check needed',   reporter: 'M. Flores',    status: 'Action Raised', ai: false },
-  { id: 'INC-2024-044', date: '2024-03-07', type: 'Near Miss',       severity: 'H', location: 'Chemical Store',    description: 'Unlabelled drum found in hazmat area — potential exposure risk',          reporter: 'K. Tanaka',    status: 'Closed',        ai: true  },
-  { id: 'INC-2024-043', date: '2024-03-04', type: 'Injury',          severity: 'H', location: 'Maintenance Shop',  description: 'Sprained ankle — worker slipped from step ladder during HVAC work',      reporter: 'C. Davis',     status: 'Closed',        ai: true  },
-  { id: 'INC-2024-042', date: '2024-02-28', type: 'Spill',           severity: 'M', location: 'Tank Farm',         description: '20L hydraulic oil spill contained within berm — no environmental impact', reporter: 'R. Singh',     status: 'Closed',        ai: false },
-  { id: 'INC-2024-041', date: '2024-02-22', type: 'Near Miss',       severity: 'C', location: 'High Bay Area',     description: 'Unsecured load overhead — crane operator raised alarm immediately',        reporter: 'S. O\'Brien',  status: 'Investigating', ai: true  },
-  { id: 'INC-2024-040', date: '2024-02-19', type: 'First Aid',       severity: 'L', location: 'Admin Building',    description: 'Eye irritation from cleaning spray — rinsed, no medical needed',          reporter: 'A. Petrov',    status: 'Closed',        ai: false },
-];
+import apiClient from '../../services/api/client';
 
 const TYPE_OPTS = ['All Types','Near Miss','First Aid','Injury','Property Damage','Spill'];
 const STATUS_OPTS = ['All Status','Investigating','Action Raised','Closed'];
@@ -21,12 +11,34 @@ const STATUS_OPTS = ['All Status','Investigating','Action Raised','Closed'];
 const SEV_LABELS = { C: 'Critical', H: 'High', M: 'Medium', L: 'Low' };
 
 const IncidentsTab = () => {
-  const [search, setSearch]   = useState('');
-  const [type, setType]       = useState('All Types');
-  const [status, setStatus]   = useState('All Status');
-  const [selected, setSelected] = useState(null);
+  const [incidents, setIncidents] = useState([]);
+  const [counts, setCounts]       = useState({ total: 0, open: 0, critical: 0, high: 0 });
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+  const [search, setSearch]       = useState('');
+  const [type, setType]           = useState('All Types');
+  const [status, setStatus]       = useState('All Status');
+  const [selected, setSelected]   = useState(null);
 
-  const filtered = INCIDENTS.filter(i =>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/incidents');
+        if (res.data.success) {
+          setIncidents(res.data.data);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load incidents');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filtered = incidents.filter(i =>
     (type   === 'All Types'   || i.type   === type) &&
     (status === 'All Status'  || i.status === status) &&
     (search === '' || i.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,20 +46,16 @@ const IncidentsTab = () => {
       i.location.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const counts = {
-    critical: INCIDENTS.filter(i => i.severity === 'C').length,
-    high: INCIDENTS.filter(i => i.severity === 'H').length,
-    open: INCIDENTS.filter(i => i.status !== 'Closed').length,
-    mtd: INCIDENTS.filter(i => i.date.startsWith('2024-03')).length,
-  };
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Stats */}
       <div className="sg4">
         {[
-          { label: 'MTD Incidents',   value: counts.mtd,      accent: '#2563eb', sub: 'March 2024' },
-          { label: 'Open / Active',   value: counts.open,     accent: '#ea580c', sub: `${INCIDENTS.length} total` },
+          { label: 'MTD Incidents',   value: counts.total,    accent: '#2563eb', sub: 'This month' },
+          { label: 'Open / Active',   value: counts.open,     accent: '#ea580c', sub: `${incidents.length} total` },
           { label: 'High Severity',   value: counts.high,     accent: '#f59e0b', sub: 'Require attention' },
           { label: 'Critical',        value: counts.critical, accent: '#dc2626', sub: 'Immediate action' },
         ].map((s, i) => (

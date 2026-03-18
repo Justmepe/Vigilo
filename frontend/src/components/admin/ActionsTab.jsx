@@ -1,21 +1,9 @@
 /**
  * Action Tracker Tab — corrective & preventive actions with priority, overdue highlighting
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
-
-const ACTIONS = [
-  { id: 'ACT-094', title: 'Install anti-slip matting at loading dock B',          source: 'INC-2024-047', priority: 'H', owner: 'J. Williams', due: '2024-03-21', status: 'In Progress',  progress: 60, category: 'Engineering' },
-  { id: 'ACT-093', title: 'Update PTW register with expired permit process',       source: 'Audit-Q1',    priority: 'M', owner: 'K. Tanaka',  due: '2024-03-28', status: 'In Progress',  progress: 30, category: 'Administrative' },
-  { id: 'ACT-092', title: 'Renew H2S certification for 3 workers (see Training)',  source: 'Training',    priority: 'C', owner: 'C. Davis',   due: '2024-03-18', status: 'Overdue',      progress: 0,  category: 'Training' },
-  { id: 'ACT-091', title: 'Inspect and tag racking damaged by forklift FL-04',    source: 'INC-2024-045', priority: 'H', owner: 'M. Flores',  due: '2024-03-15', status: 'Overdue',      progress: 80, category: 'Engineering' },
-  { id: 'ACT-090', title: 'Implement pedestrian/forklift exclusion zones in Bay 3',source: 'RSK-003',    priority: 'H', owner: 'T. Reed',     due: '2024-04-05', status: 'Not Started',  progress: 0,  category: 'Engineering' },
-  { id: 'ACT-089', title: 'Restock spill kits at tank farm (all 4 stations)',      source: 'Inspection',  priority: 'M', owner: 'R. Singh',   due: '2024-02-28', status: 'Closed',       progress: 100, category: 'Maintenance' },
-  { id: 'ACT-088', title: 'Review and update emergency evacuation maps',           source: 'Drill',       priority: 'L', owner: 'A. Petrov',  due: '2024-04-20', status: 'Not Started',  progress: 0,  category: 'Administrative' },
-  { id: 'ACT-087', title: 'Install convex mirrors at blind corners in warehouse',  source: 'RSK-003',     priority: 'H', owner: 'M. Flores',  due: '2024-04-10', status: 'In Progress',  progress: 45, category: 'Engineering' },
-  { id: 'ACT-086', title: 'Conduct toolbox talk on chemical handling procedures',  source: 'RSK-001',     priority: 'M', owner: 'K. Tanaka',  due: '2024-03-29', status: 'In Progress',  progress: 70, category: 'Training' },
-  { id: 'ACT-085', title: 'Audit confined space rescue equipment — all 6 spaces',  source: 'RSK-001',     priority: 'C', owner: 'S. O\'Brien', due: '2024-03-14', status: 'Overdue',      progress: 0,  category: 'Maintenance' },
-];
+import apiClient from '../../services/api/client';
 
 const STATUSES = ['All Status','Not Started','In Progress','Overdue','Closed'];
 const PRIORITIES = ['All Priority','C','H','M','L'];
@@ -23,29 +11,49 @@ const PRI_COLORS = { C: '#dc2626', H: '#ea580c', M: '#f59e0b', L: '#16a34a' };
 const PRI_LABELS = { C: 'Critical', H: 'High', M: 'Medium', L: 'Low' };
 
 const ActionsTab = () => {
-  const [search, setSearch]   = useState('');
-  const [status, setStatus]   = useState('All Status');
+  const [actions, setActions]   = useState([]);
+  const [counts, setCounts]     = useState({ open: 0, overdue: 0, critical: 0, closed: 0 });
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(null);
+  const [search, setSearch]     = useState('');
+  const [status, setStatus]     = useState('All Status');
   const [priority, setPriority] = useState('All Priority');
 
-  const filtered = ACTIONS.filter(a =>
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await apiClient.get('/ehs/actions');
+        if (res.data.success) {
+          setActions(res.data.data);
+          setCounts(res.data.counts);
+        }
+      } catch (err) {
+        setError('Failed to load actions');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filtered = actions.filter(a =>
     (status   === 'All Status'   || a.status   === status) &&
     (priority === 'All Priority' || a.priority === priority) &&
     (search === '' || a.title.toLowerCase().includes(search.toLowerCase()) || a.id.includes(search))
   );
 
-  const overdue    = ACTIONS.filter(a => a.status === 'Overdue').length;
-  const open       = ACTIONS.filter(a => a.status !== 'Closed').length;
-  const closed     = ACTIONS.filter(a => a.status === 'Closed').length;
-  const critical   = ACTIONS.filter(a => a.priority === 'C').length;
+  if (loading) return <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>Loading…</div>;
+  if (error)   return <div style={{ padding: 32, textAlign: 'center', color: '#dc2626' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="sg4">
         {[
-          { label: 'Total Open', value: open,     accent: '#2563eb', sub: `${ACTIONS.length} total` },
-          { label: 'Overdue',    value: overdue,   accent: '#dc2626', sub: 'Past due date' },
-          { label: 'Critical',   value: critical,  accent: '#ea580c', sub: 'Immediate action' },
-          { label: 'Closed MTD', value: closed,    accent: '#16a34a', sub: 'Completed actions' },
+          { label: 'Total Open', value: counts.open,     accent: '#2563eb', sub: `${actions.length} total` },
+          { label: 'Overdue',    value: counts.overdue,  accent: '#dc2626', sub: 'Past due date' },
+          { label: 'Critical',   value: counts.critical, accent: '#ea580c', sub: 'Immediate action' },
+          { label: 'Closed MTD', value: counts.closed,   accent: '#16a34a', sub: 'Completed actions' },
         ].map((s, i) => (
           <div className="stat-card" key={i}>
             <div className="stat-accent" style={{ background: s.accent }} />
