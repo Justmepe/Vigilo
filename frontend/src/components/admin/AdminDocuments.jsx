@@ -9,7 +9,7 @@ import apiClient from '../../services/api/client';
 import {
   Search, Archive, ArchiveRestore,
   Eye, Trash2, Cloud, ChevronLeft, ChevronRight,
-  RefreshCw, CheckCircle, Clock, XCircle,
+  RefreshCw, CheckCircle, Clock, XCircle, Download,
 } from 'lucide-react';
 
 const FORM_TYPES = [
@@ -261,6 +261,25 @@ const AdminDocuments = ({ showArchived = false }) => {
     }
   };
 
+  const handleDownload = async (doc) => {
+    try {
+      const url = doc.source === 'audit'
+        ? `/api/audit/${doc.id}/export-docx`
+        : `/api/forms/${doc.id}/export-pdf`;
+      const token = localStorage.getItem('vigilo_token') || localStorage.getItem('safety_jwt_token');
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = doc.source === 'audit' ? `audit-${doc.id}.docx` : `${doc.form_type || 'form'}-${doc.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      flash('Download failed: ' + err.message, true);
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -393,6 +412,13 @@ const AdminDocuments = ({ showArchived = false }) => {
                           className="p-1 text-gray-400 hover:text-blue-600"
                         >
                           <Eye size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDownload(doc)}
+                          title="Download"
+                          className="p-1 text-gray-400 hover:text-green-600"
+                        >
+                          <Download size={15} />
                         </button>
                         {!doc.archived_at ? (
                           <button
