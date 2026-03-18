@@ -77,3 +77,4 @@ nul
 /EXACT-*.md
 
 # ── Frontend/backend-specific gitignores handle their own ─
+backend/backend/
