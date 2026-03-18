@@ -638,7 +638,7 @@ class FormsController {
    */
   static async exportFormPDF(req, res, next) {
     try {
-      const formId = req.params.id;
+      const formId = req.params.formId || req.params.id;
 
       // Create pdfs directory if it doesn't exist
       const formsDir = path.join(__dirname, '../../pdfs');
