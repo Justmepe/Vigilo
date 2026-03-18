@@ -647,39 +647,21 @@ Length: 500-700 words. Constructive and specific to fish processing facilities.`
    * Save report to database
    */
   static async saveReportToDB(formId, report) {
-    return new Promise((resolve, reject) => {
-      db.run(
-        `UPDATE forms 
-         SET ai_report = ?, ai_report_generated_at = ?, ai_provider = ? 
-         WHERE id = ?`,
-        [report, new Date().toISOString(), 'claude', formId],
-        function(err) {
-          if (err) {
-            logger.error('Failed to save AI report to database', { formId, error: err.message });
-            return reject(err);
-          }
-          logger.debug('AI report saved to database', { formId });
-          resolve();
-        }
-      );
-    });
+    await db.runAsync(
+      `UPDATE forms SET ai_report = ?, ai_report_generated_at = ?, ai_provider = ? WHERE id = ?`,
+      [report, new Date().toISOString(), 'claude', formId]
+    );
+    logger.debug('AI report saved to database', { formId });
   }
 
   /**
    * Get report from database
    */
   static async getReport(formId) {
-    return new Promise((resolve, reject) => {
-      db.get(
-        `SELECT ai_report, ai_report_generated_at, ai_provider 
-         FROM forms WHERE id = ?`,
-        [formId],
-        (err, row) => {
-          if (err) return reject(err);
-          resolve(row);
-        }
-      );
-    });
+    return db.getAsync(
+      `SELECT ai_report, ai_report_generated_at, ai_provider FROM forms WHERE id = ?`,
+      [formId]
+    );
   }
 
   /**

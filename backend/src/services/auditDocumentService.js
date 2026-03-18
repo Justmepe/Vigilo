@@ -21,7 +21,6 @@ const {
   Header,
   Footer,
   PageNumber,
-  NumberFormat,
   convertInchesToTwip,
   TableLayoutType,
 } = require('docx');
@@ -372,7 +371,7 @@ async function generateDocx(audit, findings) {
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({ text: 'CONFIDENTIAL — FOR SAFETY COMPLIANCE PURPOSES ONLY  |  Page ', size: 16, color: COLORS.gray }),
-                  new PageNumber({ format: NumberFormat.DECIMAL }),
+                  new TextRun({ children: [PageNumber.CURRENT] }),
                 ],
               }),
             ],
