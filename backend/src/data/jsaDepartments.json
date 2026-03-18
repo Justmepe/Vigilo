@@ -1,0 +1,204 @@
+{
+  "Case Up": {
+    "jobs": {
+      "Lifts": {
+        "steps": [
+          {
+            "number": 1,
+            "description": "Press button to open freezer window",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE"
+          },
+          {
+            "number": 2,
+            "description": "Look into window to make sure cart is properly placed into the elevator. Toggle joystick to engage elevator",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE"
+          },
+          {
+            "number": 3,
+            "description": "Once elevator has stopped at first rack level, toggle joystick to release ram. Blocks will slide out from freezer onto belt",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE"
+          },
+          {
+            "number": 4,
+            "description": "If blocks become stuck use gaff to grab and pull pan out. Careful of hand and fingers to be out of the way",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE"
+          },
+          {
+            "number": 5,
+            "description": "As blocks slide to belt with free hand position blocks so they are horizontal moving down the belt",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE"
+          },
+          {
+            "number": 6,
+            "description": "Continue to eject pans until entire rack is empty (10 levels). Once emptied, toggle joystick last time to engage elevator to upstairs",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE"
+          },
+          {
+            "number": 7,
+            "description": "Press button to close window, continue on to next lane",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE"
+          }
+        ],
+        "general_hazards": [
+          {
+            "hazard": "Anhydrous Ammonia/Fire/Tsunami/Earthquake",
+            "control": "Know evacuation procedures, routes and your role in an emergency"
+          },
+          {
+            "hazard": "Noise exposure and foreign body in eye/splash exposure/work area is slick",
+            "control": "Results of noise surveys, Proper use of hearing protection, Wear hearing protection at all times, Be aware of eye wash location, Proper foot placement"
+          }
+        ]
+      },
+      "Block Flipper": {
+        "steps": [
+          {
+            "number": 1,
+            "description": "Using right hand holding block flipper. Use left hand to place fish block into flipper",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE, Job Rotation"
+          },
+          {
+            "number": 2,
+            "description": "With right hand rotate block flipper so that fish disconnect",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE, Job Rotation"
+          },
+          {
+            "number": 3,
+            "description": "If fish have not separated use a few thrusts with right hand to loosen fish out",
+            "hazards": "Pinch points, Strains - fingers/hands/wrist/back/crush hazard/frostbite/repetitive motion",
+            "controls": "Training: Avoid exaggerated hand/wrist movements/twisting, Be aware of hand placement, Proper PPE, Job Rotation"
+          }
+        ],
+        "general_hazards": [
+          {
+            "hazard": "Anhydrous Ammonia/Fire/Tsunami/Earthquake",
+            "control": "Know evacuation procedures, routes and your role in an emergency"
+          },
+          {
+            "hazard": "Noise exposure and foreign body in eye/splash exposure/work area is slick",
+            "control": "Results of noise surveys, Proper use of hearing protection, Wear hearing protection at all times, Be aware of eye wash location, Proper foot placement"
+          }
+        ]
+      },
+      "Forklift Operator": {
+        "steps": [
+          {
+            "number": 1,
+            "description": "Go through forklift safety checklist any defects record and report to management",
+            "hazards": "Fall Hazard, cut hazard, pinch points, combustible",
+            "controls": "Training: Pre-inspection checklist complete, No forklift shall be operated until defects are fixed, Proper training and PPE"
+          },
+          {
+            "number": 2,
+            "description": "Locate partial totes and container they are being stored in. Make sure refer is turned off. Open the door to container. Lift ramp using forklift and place securely on the lip of the container",
+            "hazards": "Fall Hazard, Roll over hazard, Pedestrian Traffic",
+            "controls": "Training: Watch the edge of the loading dock, Wear PPE seat belt when operating forklift, Use horn when backing going around people or blind corners, Keep forks low to the ground as possible"
+          },
+          {
+            "number": 3,
+            "description": "Unload partial tote from the container and place next to IQF case up line",
+            "hazards": "Roll over hazard, Pedestrian traffic",
+            "controls": "Training: Watch the edge of the loading dock, Wear PPE seat belt when operating forklift, Use horn when backing going around people or blind corners, Keep forks low to the ground as possible"
+          },
+          {
+            "number": 4,
+            "description": "Once tote is complete move to scaling station",
+            "hazards": "Roll over hazard, Pedestrian traffic",
+            "controls": "Training: Wear PPE seat belt when operating forklift, Use horn when backing going around people or blind corners, Keep forks low to the ground as possible"
+          },
+          {
+            "number": 5,
+            "description": "After tote is sealed and labeled and scanned move tote to appropriate container",
+            "hazards": "Roll over hazard, Pedestrian traffic",
+            "controls": "Training: Wear PPE seat belt when operating forklift, Use horn when backing going around people or blind corners, Keep forks low to the ground as possible"
+          },
+          {
+            "number": 6,
+            "description": "Stack totes 2 high chimney style 40 totes per container",
+            "hazards": "Roll over hazard, Pedestrian traffic",
+            "controls": "Training: Wear PPE seat belt when operating forklift, Use horn when backing going around people or blind corners, Keep forks low to the ground as possible"
+          },
+          {
+            "number": 7,
+            "description": "Remove loading ramp once complete and close van doors",
+            "hazards": "Roll over hazard, Pedestrian traffic",
+            "controls": "Training: Wear PPE seat belt when operating forklift, Use horn when backing going around people or blind corners, Keep forks low to the ground as possible"
+          }
+        ],
+        "general_hazards": [
+          {
+            "hazard": "Anhydrous Ammonia/Fire/Tsunami/Earthquake",
+            "control": "Know evacuation procedures, routes and your role in an emergency"
+          },
+          {
+            "hazard": "Noise exposure and foreign body in eye/splash exposure/work area is slick",
+            "control": "Results of noise surveys, Proper use of hearing protection, Wear hearing protection at all times, Be aware of eye wash location, Proper foot placement"
+          }
+        ]
+      }
+    }
+  },
+  "IQF Case Up": {
+    "jobs": {
+      "IQF Breakout": {
+        "steps": [
+          {
+            "number": 1,
+            "description": "Identify product Pet food or IQF",
+            "hazards": "",
+            "controls": "Training: Proper identification procedures"
+          },
+          {
+            "number": 2,
+            "description": "Using both hands remove the block from the rack",
+            "hazards": "Strains - fingers/hands/wrist/back/crush hazard",
+            "controls": "Training: Avoid exaggerated hand/wrist movements, Use proper lifting techniques, Proper hand placement"
+          },
+          {
+            "number": 3,
+            "description": "Flip pet food upside down on breakout table push block to the pet food line",
+            "hazards": "Strains - fingers/hands/wrist/back/crush hazard",
+            "controls": "Training: Avoid exaggerated hand/wrist movements, Use proper lifting techniques, Proper hand placement"
+          },
+          {
+            "number": 4,
+            "description": "Remove pan and place on pan return cart stacking uniformly",
+            "hazards": "Strains - fingers/hands/wrist/back",
+            "controls": "Training: Avoid exaggerated hand/wrist movements, Use proper lifting techniques, Proper hand placement"
+          },
+          {
+            "number": 5,
+            "description": "IQF identify cart tag for quality grade and size grade",
+            "hazards": "",
+            "controls": "Training: Proper grade identification"
+          },
+          {
+            "number": 6,
+            "description": "Communicate to case up lead the quality, size and species. Never mix totes",
+            "hazards": "",
+            "controls": "Training: Proper communication procedures"
+          }
+        ],
+        "general_hazards": [
+          {
+            "hazard": "Anhydrous Ammonia/Fire/Tsunami/Earthquake",
+            "control": "Know evacuation procedures, routes and your role in an emergency"
+          },
+          {
+            "hazard": "Noise exposure and foreign body in eye/splash exposure/work area is slick",
+            "control": "Results of noise surveys, Proper use of hearing protection, Wear hearing protection at all times, Be aware of eye wash location, Proper foot placement"
+          }
+        ]
+      }
+    }
+  }
+}

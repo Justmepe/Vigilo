@@ -1,0 +1,480 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Source+Sans+3:wght@300;400;600;700&display=swap');
+
+/* ── CSS VARIABLES ── */
+.vigilo-lp {
+  --vl-navy: #0d1f35;
+  --vl-navy2: #152a47;
+  --vl-navy3: #1d3a5f;
+  --vl-gold: #c9943a;
+  --vl-gold2: #e8b45a;
+  --vl-gold3: #f5d08a;
+  --vl-cream: #f7f4ee;
+  --vl-cream2: #ede8de;
+  --vl-white: #ffffff;
+  --vl-slate: #5c6e82;
+  --vl-text: #1a2b3c;
+
+  font-family: 'Source Sans 3', sans-serif;
+  background: var(--vl-cream);
+  color: var(--vl-text);
+  overflow-x: hidden;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes vl-fadeUp   { from { opacity: 0; transform: translateY(32px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes vl-fadeIn   { from { opacity: 0 } to { opacity: 1 } }
+@keyframes vl-float    { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-12px) } }
+@keyframes vl-pulse    { 0%,100% { opacity: 1 } 50% { opacity: .5 } }
+
+.vigilo-lp .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease }
+.vigilo-lp .reveal.visible { opacity: 1; transform: translateY(0) }
+
+/* ── NAV ── */
+.vigilo-lp nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5%; height: 72px;
+  background: rgba(13,31,53,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(201,148,58,.15);
+  animation: vl-fadeIn .6s ease;
+}
+.vigilo-lp .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none }
+.vigilo-lp .nav-logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--vl-gold), var(--vl-gold2));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.vigilo-lp .nav-brand { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--vl-white); letter-spacing: -.2px }
+.vigilo-lp .nav-links { display: flex; align-items: center; gap: 36px }
+.vigilo-lp .nav-links a { font-size: 13.5px; color: rgba(255,255,255,.65); text-decoration: none; letter-spacing: .2px; transition: color .2s }
+.vigilo-lp .nav-links a:hover { color: var(--vl-gold2) }
+.vigilo-lp .nav-cta {
+  background: linear-gradient(135deg, var(--vl-gold), var(--vl-gold2));
+  color: var(--vl-navy); font-size: 13px; font-weight: 700;
+  border: none; border-radius: 7px; padding: 10px 24px;
+  cursor: pointer; letter-spacing: .3px;
+  transition: transform .2s, box-shadow .2s;
+}
+.vigilo-lp .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,148,58,.35) }
+
+/* ── HERO ── */
+.vigilo-lp .hero {
+  min-height: 100vh;
+  background: var(--vl-navy);
+  position: relative; overflow: hidden;
+  display: flex; align-items: center;
+  padding: 120px 5% 80px;
+}
+.vigilo-lp .hero-bg-ring {
+  position: absolute; border-radius: 50%; border: 1px solid rgba(201,148,58,.08);
+}
+.vigilo-lp .hero-bg-ring:nth-child(1) { width: 600px; height: 600px; top: -150px; right: -100px }
+.vigilo-lp .hero-bg-ring:nth-child(2) { width: 900px; height: 900px; top: -300px; right: -250px }
+.vigilo-lp .hero-bg-ring:nth-child(3) { width: 400px; height: 400px; bottom: -100px; left: 20% }
+.vigilo-lp .hero-grid-lines {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(201,148,58,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,148,58,.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.vigilo-lp .hero-corner-accent {
+  position: absolute; top: 0; right: 0;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle at top right, rgba(201,148,58,.12), transparent 70%);
+}
+.vigilo-lp .hero-content {
+  position: relative; z-index: 2;
+  max-width: 1200px; margin: 0 auto; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+}
+.vigilo-lp .hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(201,148,58,.1);
+  border: 1px solid rgba(201,148,58,.25);
+  border-radius: 40px; padding: 6px 16px;
+  margin-bottom: 28px;
+  animation: vl-fadeUp .8s ease .2s both;
+}
+.vigilo-lp .hero-eyebrow-dot { width: 6px; height: 6px; background: var(--vl-gold2); border-radius: 50%; animation: vl-pulse 2s ease infinite }
+.vigilo-lp .hero-eyebrow span { font-size: 12px; color: var(--vl-gold2); font-weight: 600; letter-spacing: .8px; text-transform: uppercase }
+.vigilo-lp .hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(48px, 6vw, 72px); font-weight: 900;
+  line-height: 1.05; color: var(--vl-white);
+  letter-spacing: -1.5px; margin-bottom: 24px;
+  animation: vl-fadeUp .8s ease .35s both;
+}
+.vigilo-lp .hero-title em { font-style: italic; color: var(--vl-gold2); display: block }
+.vigilo-lp .hero-title-line {
+  height: 3px;
+  background: linear-gradient(90deg, var(--vl-gold), transparent);
+  width: 80px; margin: 16px 0 0;
+  animation: vl-fadeUp .8s ease .4s both;
+}
+.vigilo-lp .hero-desc {
+  font-size: 17px; line-height: 1.75;
+  color: rgba(255,255,255,.62);
+  margin-bottom: 40px; max-width: 460px;
+  animation: vl-fadeUp .8s ease .5s both;
+}
+.vigilo-lp .hero-actions {
+  display: flex; gap: 14px; margin-bottom: 56px;
+  animation: vl-fadeUp .8s ease .6s both;
+}
+.vigilo-lp .btn-primary {
+  background: linear-gradient(135deg, var(--vl-gold), var(--vl-gold2));
+  color: var(--vl-navy); font-size: 15px; font-weight: 700;
+  border: none; border-radius: 8px; padding: 15px 32px;
+  cursor: pointer; letter-spacing: .2px;
+  transition: transform .2s, box-shadow .2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.vigilo-lp .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(201,148,58,.4) }
+.vigilo-lp .btn-secondary {
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.8); font-size: 15px; font-weight: 400;
+  border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 15px 32px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.vigilo-lp .btn-secondary:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.3) }
+.vigilo-lp .hero-stats {
+  display: flex; gap: 40px; padding-top: 40px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  animation: vl-fadeUp .8s ease .75s both;
+}
+.vigilo-lp .hero-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 38px; font-weight: 900; font-style: italic;
+  color: var(--vl-gold2); line-height: 1;
+}
+.vigilo-lp .hero-stat-lbl { font-size: 12px; color: rgba(255,255,255,.45); margin-top: 5px; letter-spacing: .3px }
+
+/* ── HERO MOCKUP ── */
+.vigilo-lp .hero-mockup { position: relative; animation: vl-fadeUp .9s ease .5s both }
+.vigilo-lp .hero-mockup-glow {
+  position: absolute; inset: -40px;
+  background: radial-gradient(ellipse at center, rgba(201,148,58,.08), transparent 70%);
+  border-radius: 50%;
+}
+.vigilo-lp .mockup-window {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(201,148,58,.2);
+  border-radius: 16px; overflow: hidden;
+  backdrop-filter: blur(8px);
+  position: relative; z-index: 1;
+  animation: vl-float 6s ease-in-out infinite;
+}
+.vigilo-lp .mockup-titlebar {
+  background: rgba(255,255,255,.06);
+  padding: 12px 18px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.vigilo-lp .traffic-dot { width: 10px; height: 10px; border-radius: 50% }
+.vigilo-lp .traffic-dot.red { background: #ff5f57 }
+.vigilo-lp .traffic-dot.yellow { background: #febc2e }
+.vigilo-lp .traffic-dot.green { background: #28c840 }
+.vigilo-lp .mockup-url {
+  flex: 1; margin-left: 8px; background: rgba(255,255,255,.06);
+  border-radius: 5px; padding: 5px 10px;
+  font-size: 11.5px; color: rgba(255,255,255,.35);
+  font-family: monospace;
+}
+.vigilo-lp .mockup-body { padding: 22px }
+.vigilo-lp .mock-form-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px; padding: 18px; margin-bottom: 12px;
+}
+.vigilo-lp .mock-form-card-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.vigilo-lp .mock-form-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.85) }
+.vigilo-lp .mock-form-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+  background: rgba(201,148,58,.2); color: var(--vl-gold2);
+}
+.vigilo-lp .mock-field { margin-bottom: 10px }
+.vigilo-lp .mock-label { font-size: 10px; color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px }
+.vigilo-lp .mock-value { font-size: 12.5px; color: rgba(255,255,255,.7); background: rgba(255,255,255,.05); border-radius: 5px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.08) }
+.vigilo-lp .risk-row { display: flex; gap: 8px; margin-top: 12px }
+.vigilo-lp .risk-pill { flex: 1; text-align: center; padding: 6px; border-radius: 6px; font-size: 10px; font-weight: 700 }
+.vigilo-lp .risk-low { background: rgba(40,200,130,.15); color: #4ade80 }
+.vigilo-lp .risk-med { background: rgba(250,180,50,.15); color: #fbbf24 }
+.vigilo-lp .risk-high { background: rgba(240,80,80,.15); color: #f87171 }
+.vigilo-lp .mockup-ai-bar {
+  background: rgba(201,148,58,.08);
+  border: 1px solid rgba(201,148,58,.2);
+  border-radius: 8px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.vigilo-lp .ai-icon { width: 28px; height: 28px; background: rgba(201,148,58,.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
+.vigilo-lp .ai-text { font-size: 12px; color: rgba(255,255,255,.65); flex: 1 }
+.vigilo-lp .ai-status { font-size: 10px; color: var(--vl-gold2); font-weight: 600 }
+.vigilo-lp .float-badge {
+  position: absolute;
+  background: #1a3a5c;
+  border: 1px solid rgba(201,148,58,.3);
+  border-radius: 10px; padding: 10px 14px;
+  z-index: 2;
+  animation: vl-float 5s ease-in-out infinite;
+}
+.vigilo-lp .float-badge-1 { top: -18px; right: -20px; animation-delay: .5s }
+.vigilo-lp .float-badge-2 { bottom: -18px; left: -20px; animation-delay: 1.2s }
+.vigilo-lp .fb-label { font-size: 10px; color: rgba(255,255,255,.45); margin-bottom: 3px }
+.vigilo-lp .fb-value { font-size: 13px; font-weight: 700; color: var(--vl-white) }
+.vigilo-lp .fb-value.green { color: #4ade80 }
+.vigilo-lp .fb-value.gold { color: var(--vl-gold2) }
+
+/* ── STATS BAND ── */
+.vigilo-lp .stats-band {
+  background: var(--vl-gold);
+  padding: 24px 5%;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+}
+.vigilo-lp .stat-item {
+  text-align: center; padding: 8px 0;
+  border-right: 1px solid rgba(13,31,53,.15);
+}
+.vigilo-lp .stat-item:last-child { border-right: none }
+.vigilo-lp .stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px; font-weight: 900;
+  color: var(--vl-navy); line-height: 1;
+}
+.vigilo-lp .stat-label { font-size: 12px; color: rgba(13,31,53,.65); margin-top: 4px; font-weight: 600; letter-spacing: .2px }
+
+/* ── SECTIONS ── */
+.vigilo-lp section { padding: 100px 5% }
+.vigilo-lp .section-eyebrow { font-size: 11px; font-weight: 700; color: var(--vl-gold); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px }
+.vigilo-lp .section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 4vw, 48px); font-weight: 900;
+  color: var(--vl-navy); line-height: 1.1; letter-spacing: -.5px;
+}
+.vigilo-lp .section-title em { font-style: italic; color: var(--vl-gold) }
+.vigilo-lp .section-desc { font-size: 17px; color: var(--vl-slate); line-height: 1.7; max-width: 500px; margin-top: 16px }
+
+/* ── INTRO ── */
+.vigilo-lp .intro { background: var(--vl-cream); display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center }
+.vigilo-lp .intro-visual { position: relative }
+.vigilo-lp .intro-main-card {
+  background: var(--vl-navy); border-radius: 16px; padding: 32px;
+  border: 1px solid rgba(201,148,58,.15);
+  position: relative; overflow: hidden;
+}
+.vigilo-lp .intro-main-card::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(201,148,58,.08), transparent 70%);
+}
+.vigilo-lp .imc-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 24px;
+  padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.vigilo-lp .imc-icon {
+  width: 40px; height: 40px; background: rgba(201,148,58,.15);
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+}
+.vigilo-lp .imc-title { font-size: 14px; font-weight: 700; color: var(--vl-white) }
+.vigilo-lp .imc-sub { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 2px }
+.vigilo-lp .imc-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.vigilo-lp .imc-metric {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+  border-radius: 8px; padding: 14px;
+}
+.vigilo-lp .imc-metric-val { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; color: var(--vl-gold2) }
+.vigilo-lp .imc-metric-lbl { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 3px }
+.vigilo-lp .intro-small-card {
+  position: absolute;
+  background: var(--vl-white); border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 32px rgba(13,31,53,.12);
+  border: 1px solid var(--vl-cream2);
+}
+.vigilo-lp .isc-1 { bottom: -20px; right: -24px }
+.vigilo-lp .isc-2 { top: -20px; left: -24px }
+.vigilo-lp .isc-label { font-size: 10px; color: var(--vl-slate); margin-bottom: 4px; font-weight: 600 }
+.vigilo-lp .isc-val { font-size: 15px; font-weight: 700; color: var(--vl-navy) }
+.vigilo-lp .isc-val.green { color: #16a34a }
+.vigilo-lp .intro-checklist { margin-top: 36px; display: flex; flex-direction: column; gap: 14px }
+.vigilo-lp .intro-check { display: flex; align-items: flex-start; gap: 12px }
+.vigilo-lp .check-icon {
+  width: 22px; height: 22px; background: rgba(201,148,58,.1); border: 1px solid rgba(201,148,58,.3);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.vigilo-lp .check-text { font-size: 15px; color: var(--vl-slate); line-height: 1.5 }
+.vigilo-lp .check-text strong { color: var(--vl-navy); font-weight: 700 }
+
+/* ── FEATURES ── */
+.vigilo-lp .features-section { background: var(--vl-navy) }
+.vigilo-lp .features-section .section-eyebrow { color: var(--vl-gold2) }
+.vigilo-lp .features-section .section-title { color: var(--vl-white) }
+.vigilo-lp .features-section .section-desc { color: rgba(255,255,255,.55) }
+.vigilo-lp .features-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px; overflow: hidden;
+  margin-top: 56px;
+}
+.vigilo-lp .feat-card {
+  background: var(--vl-navy);
+  padding: 36px 32px;
+  position: relative; overflow: hidden;
+  transition: background .3s;
+  cursor: default;
+}
+.vigilo-lp .feat-card::before {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--vl-gold), transparent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .4s ease;
+}
+.vigilo-lp .feat-card:hover { background: rgba(255,255,255,.03) }
+.vigilo-lp .feat-card:hover::before { transform: scaleX(1) }
+.vigilo-lp .feat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px; font-weight: 900; font-style: italic;
+  color: rgba(201,148,58,.12);
+  position: absolute; top: 20px; right: 24px; line-height: 1;
+}
+.vigilo-lp .feat-icon {
+  width: 48px; height: 48px;
+  background: rgba(201,148,58,.1);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+  transition: background .3s;
+}
+.vigilo-lp .feat-card:hover .feat-icon { background: rgba(201,148,58,.18) }
+.vigilo-lp .feat-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--vl-white); margin-bottom: 10px }
+.vigilo-lp .feat-desc { font-size: 14px; color: rgba(255,255,255,.5); line-height: 1.65 }
+
+/* ── SECURITY ── */
+.vigilo-lp .security { background: var(--vl-cream2); display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center }
+.vigilo-lp .security-visual {
+  background: var(--vl-navy); border-radius: 16px; padding: 36px;
+  border: 1px solid rgba(201,148,58,.15);
+  position: relative; overflow: hidden;
+}
+.vigilo-lp .security-visual::before {
+  content: ''; position: absolute; top: -80px; right: -80px;
+  width: 250px; height: 250px; border-radius: 50%;
+  border: 1px solid rgba(201,148,58,.06);
+}
+.vigilo-lp .security-visual::after {
+  content: ''; position: absolute; top: -120px; right: -120px;
+  width: 350px; height: 350px; border-radius: 50%;
+  border: 1px solid rgba(201,148,58,.04);
+}
+.vigilo-lp .sec-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.vigilo-lp .sec-item:last-child { border-bottom: none; padding-bottom: 0 }
+.vigilo-lp .sec-item:first-child { padding-top: 0 }
+.vigilo-lp .sec-icon {
+  width: 38px; height: 38px; flex-shrink: 0;
+  background: rgba(201,148,58,.1);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+}
+.vigilo-lp .sec-title { font-size: 14px; font-weight: 700; color: var(--vl-white); margin-bottom: 4px }
+.vigilo-lp .sec-desc { font-size: 13px; color: rgba(255,255,255,.45); line-height: 1.55 }
+.vigilo-lp .security-checks { margin-top: 32px; display: flex; flex-direction: column; gap: 12px }
+.vigilo-lp .sec-check { display: flex; align-items: center; gap: 10px }
+.vigilo-lp .sec-check-dot {
+  width: 18px; height: 18px; background: rgba(40,200,130,.15);
+  border: 1px solid rgba(40,200,130,.3); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.vigilo-lp .sec-check span { font-size: 14.5px; color: var(--vl-slate) }
+
+/* ── QUOTE ── */
+.vigilo-lp .quote-section {
+  background: var(--vl-navy);
+  text-align: center; padding: 80px 5%;
+  position: relative; overflow: hidden;
+}
+.vigilo-lp .quote-section::before {
+  content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,148,58,.06), transparent 70%);
+}
+.vigilo-lp .quote-mark {
+  font-family: 'Playfair Display', serif;
+  font-size: 120px; line-height: .7;
+  color: rgba(201,148,58,.12); margin-bottom: -20px;
+}
+.vigilo-lp .quote-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(20px, 3vw, 28px);
+  font-style: italic; font-weight: 700;
+  color: var(--vl-white);
+  max-width: 700px; margin: 0 auto; line-height: 1.45;
+}
+.vigilo-lp .quote-author { margin-top: 28px; font-size: 13px; color: rgba(255,255,255,.45); letter-spacing: .5px }
+.vigilo-lp .quote-author strong { color: var(--vl-gold2) }
+
+/* ── CTA ── */
+.vigilo-lp .cta-section { background: var(--vl-cream); text-align: center; padding: 100px 5%; position: relative }
+.vigilo-lp .cta-box {
+  background: var(--vl-navy);
+  border-radius: 20px; padding: 72px 40px;
+  max-width: 800px; margin: 0 auto;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(201,148,58,.15);
+}
+.vigilo-lp .cta-box::before {
+  content: ''; position: absolute;
+  top: -150px; left: 50%; transform: translateX(-50%);
+  width: 400px; height: 400px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,148,58,.08), transparent 70%);
+}
+.vigilo-lp .cta-eyebrow { font-size: 11px; color: var(--vl-gold2); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 16px }
+.vigilo-lp .cta-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 5vw, 48px); font-weight: 900;
+  color: var(--vl-white); line-height: 1.1;
+  letter-spacing: -.5px; margin-bottom: 18px;
+}
+.vigilo-lp .cta-title em { font-style: italic; color: var(--vl-gold2) }
+.vigilo-lp .cta-desc { font-size: 16px; color: rgba(255,255,255,.55); margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.65 }
+.vigilo-lp .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px }
+.vigilo-lp .cta-note { font-size: 12px; color: rgba(255,255,255,.3); letter-spacing: .2px }
+.vigilo-lp .cta-note a { color: rgba(255,255,255,.45); text-decoration: none }
+
+/* ── FOOTER ── */
+.vigilo-lp footer { background: var(--vl-navy); padding: 64px 5% 32px; border-top: 1px solid rgba(201,148,58,.1) }
+.vigilo-lp .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 56px }
+.vigilo-lp .footer-brand { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--vl-white); margin-bottom: 12px; display: flex; align-items: center; gap: 8px }
+.vigilo-lp .footer-brand-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--vl-gold), var(--vl-gold2)); border-radius: 6px; display: flex; align-items: center; justify-content: center }
+.vigilo-lp .footer-tagline { font-size: 14px; color: rgba(255,255,255,.35); line-height: 1.65; max-width: 260px }
+.vigilo-lp .footer-col h4 { font-size: 12px; font-weight: 700; color: var(--vl-white); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 16px }
+.vigilo-lp .footer-col a { display: block; font-size: 13.5px; color: rgba(255,255,255,.4); text-decoration: none; margin-bottom: 10px; transition: color .2s }
+.vigilo-lp .footer-col a:hover { color: var(--vl-gold2) }
+.vigilo-lp .footer-bottom {
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding-top: 28px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+.vigilo-lp .footer-copy { font-size: 12.5px; color: rgba(255,255,255,.3) }
+.vigilo-lp .footer-social { display: flex; gap: 20px }
+.vigilo-lp .footer-social a { font-size: 12.5px; color: rgba(255,255,255,.3); text-decoration: none; transition: color .2s }
+.vigilo-lp .footer-social a:hover { color: var(--vl-gold2) }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .vigilo-lp .hero-content,
+  .vigilo-lp .intro,
+  .vigilo-lp .security { grid-template-columns: 1fr; gap: 48px }
+  .vigilo-lp .hero-mockup { display: none }
+  .vigilo-lp .features-grid { grid-template-columns: 1fr }
+  .vigilo-lp .stats-band { grid-template-columns: repeat(2, 1fr) }
+  .vigilo-lp .footer-top { grid-template-columns: 1fr 1fr }
+}

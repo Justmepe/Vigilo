@@ -1,0 +1,50 @@
+INSPECTION ASSESSMENT REPORT
+
+1. EXECUTIVE SUMMARY
+
+This monthly safety and hygiene inspection was conducted at the Cold Storage Facility (Zones A, B, C) of Silver Bay Seafoods in Seattle, WA on February 11, 2026. The inspection was led by Safety Manager Patricia Wong and covered OSHA standards, FDA/FSMA requirements, and adherence to company safety policies.
+
+The overall inspection findings indicate a Satisfactory level of compliance, with 3 minor deficiencies identified. There were no immediate hazards or critical issues found during this assessment.
+
+2. COMPLIANCE ASSESSMENT
+
+OSHA Standards Compliance: The facility was found to be in full compliance with relevant OSHA regulations for cold storage operations, including proper ventilation, temperature controls, and employee training.
+
+FDA/FSMA Requirements: The cold storage areas were observed to meet FDA food safety standards for temperature monitoring, pest control, and sanitation procedures as required under the Food Safety Modernization Act (FSMA).
+
+Company Policy Adherence: The facility adhered to Silver Bay Seafoods' internal safety and hygiene policies with only minor deviations noted.
+
+Overall Rating: Satisfactory
+
+3. CRITICAL FINDINGS
+No immediate hazards or critical issues were identified during this inspection.
+
+4. DEFICIENCY ANALYSIS
+
+The 3 minor deficiencies found are as follows:
+1. Several pallet racking supports were showing signs of corrosion and damage, posing a potential collapse risk.
+2. Condensation buildup was observed on the ceiling in Zone C, indicating potential issues with the refrigeration system.
+3. Incomplete documentation of temperature monitoring logs in Zone A over the past week.
+
+These deficiencies, while not severe, represent some systemic issues that require attention. The corrosion and condensation problems suggest a need for more proactive maintenance, while the documentation lapses point to potential training or oversight gaps.
+
+5. CORRECTIVE ACTION PLAN
+
+Priority 1 (within 24 hours):
+- Inspect and replace any severely corroded pallet racking supports to eliminate collapse hazards.
+
+Priority 2 (within 7 days):
+- Investigate and repair the refrigeration system in Zone C to address the condensation buildup.
+- Retrain staff on proper temperature monitoring and record-keeping procedures.
+
+Priority 3 (within 30 days):
+- Implement a comprehensive preventative maintenance program for all cold storage equipment and infrastructure.
+- Conduct a full audit of temperature monitoring practices and documentation across all zones.
+
+6. FOLLOW-UP REQUIREMENTS
+
+A re-inspection will be scheduled within 30 days to verify that all Priority 1 and Priority 2 corrective actions have been completed satisfactorily.
+
+Ongoing spot-checks and reviews of temperature logs will be conducted by the safety team to ensure sustained compliance. Any recurring issues or unresolved deficiencies will result in a more frequent inspection schedule.
+
+This report will be shared with the facility management team, and progress on the corrective action plan will be tracked and reported to executive leadership on a monthly basis.

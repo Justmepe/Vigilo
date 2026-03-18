@@ -1,0 +1,50 @@
+[
+  {
+    "formType": "jsa",
+    "formId": 1001,
+    "status": "SUCCESS",
+    "duration": "11.52",
+    "reportLength": 6220,
+    "reportPath": "D:\\Safety\\backend\\test-reports\\jsa-report-1001.txt"
+  },
+  {
+    "formType": "loto",
+    "formId": 2001,
+    "status": "SUCCESS",
+    "duration": "4.93",
+    "reportLength": 2940,
+    "reportPath": "D:\\Safety\\backend\\test-reports\\loto-report-2001.txt"
+  },
+  {
+    "formType": "injury",
+    "formId": 3001,
+    "status": "SUCCESS",
+    "duration": "7.37",
+    "reportLength": 4735,
+    "reportPath": "D:\\Safety\\backend\\test-reports\\injury-report-3001.txt"
+  },
+  {
+    "formType": "accident",
+    "formId": 4001,
+    "status": "SUCCESS",
+    "duration": "5.82",
+    "reportLength": 3434,
+    "reportPath": "D:\\Safety\\backend\\test-reports\\accident-report-4001.txt"
+  },
+  {
+    "formType": "spill",
+    "formId": 5001,
+    "status": "SUCCESS",
+    "duration": "6.84",
+    "reportLength": 4200,
+    "reportPath": "D:\\Safety\\backend\\test-reports\\spill-report-5001.txt"
+  },
+  {
+    "formType": "inspection",
+    "formId": 6001,
+    "status": "SUCCESS",
+    "duration": "5.58",
+    "reportLength": 3126,
+    "reportPath": "D:\\Safety\\backend\\test-reports\\inspection-report-6001.txt"
+  }
+]

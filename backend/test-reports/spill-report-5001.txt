@@ -1,0 +1,40 @@
+Spill Investigation Report
+
+1. EXECUTIVE SUMMARY
+
+On February 12, 2026, a spill of approximately 15 gallons of hydraulic fluid (ISO 68) occurred at the maintenance shop in Silver Bay Seafoods' East Bay facility. The spill was promptly reported by the maintenance technician, Alex Rivera, and immediate containment actions were taken, including the deployment of absorbent booms and spill pads. The affected area was cordoned off, and the cleanup was completed, with the absorbed material disposed of as hazardous waste, and the area degreased. 
+
+The spill was effectively contained to the sealed concrete floor, and there was no soil or water contamination. The prompt and appropriate response by the facility personnel has mitigated the potential environmental impact of this incident.
+
+2. ENVIRONMENTAL IMPACT ASSESSMENT
+
+Hydraulic fluid (ISO 68) is classified as a non-biodegradable, toxic substance that can be harmful to aquatic life and wildlife if released into the environment. The 15-gallon quantity of the spill is considered significant, as it exceeds the EPA's reportable quantity of 25 gallons for hydraulic fluid under the Comprehensive Environmental Response, Compensation, and Liability Act (CERCLA).
+
+However, the containment of the spill to the sealed concrete floor has effectively prevented any soil or water contamination, minimizing the risk of environmental damage. The lack of direct contact with the surrounding ecosystem, including wildlife and waterways, suggests a low impact on the local environment.
+
+3. REGULATORY COMPLIANCE
+
+As the spill quantity exceeds the EPA's reportable quantity, Silver Bay Seafoods is required to report the incident to the National Response Center under CERCLA within 24 hours of the release. Additionally, the facility must notify the Washington State Department of Ecology, as per the state's environmental regulations.
+
+The required response timeline for the cleanup and reporting is 24 hours, and failure to comply could result in significant fines and penalties under the Resource Conservation and Recovery Act (RCRA) and state environmental laws.
+
+4. RESPONSE EFFECTIVENESS
+
+The immediate containment actions taken by the facility personnel, including the deployment of absorbent booms and spill pads, were effective in preventing the further spread of the hydraulic fluid. The cordoning off of the affected area and the complete cleanup, with the absorbed material disposed of as hazardous waste, demonstrate compliance with the required response procedures.
+
+The use of appropriate personal protective equipment (PPE), such as chemical-resistant gloves, goggles, and coveralls, ensured the safety of the cleanup crew and prevented any potential exposure to the spilled material.
+
+5. ROOT CAUSE & PREVENTION
+
+The root cause of the spill appears to be a failure in the maintenance procedures or equipment, leading to the release of the hydraulic fluid. To prevent the recurrence of such incidents, Silver Bay Seafoods should implement the following measures:
+
+- Conduct a thorough inspection and maintenance review of all hydraulic systems and equipment in the maintenance shop to identify and address any potential vulnerabilities.
+- Develop and implement a comprehensive preventive maintenance program to ensure the proper functioning and integrity of hydraulic systems.
+- Provide enhanced training for maintenance personnel on proper handling, storage, and disposal of hazardous materials, as well as spill response procedures.
+- Consider the installation of secondary containment structures, such as berms or containment pans, around hydraulic equipment to further mitigate the risk of spills.
+
+6. CLOSURE REQUIREMENTS
+
+Silver Bay Seafoods has completed the required cleanup and reporting actions for this spill incident. The facility must ensure that all necessary documentation, including the spill report, cleanup records, and regulatory notifications, are properly maintained for future reference and potential regulatory audits.
+
+Additionally, the facility should continue to monitor the affected area for any signs of residual contamination or environmental impact and be prepared to take further remedial actions if necessary.

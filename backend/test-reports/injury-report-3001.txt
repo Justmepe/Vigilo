@@ -1,0 +1,71 @@
+INJURY INVESTIGATION REPORT
+
+1. EXECUTIVE SUMMARY
+
+This report investigates the laceration injury sustained by Robert Garcia, a packaging line worker at Silver Bay Seafoods' Seattle facility on February 14, 2026. Mr. Garcia suffered a 2-inch cut to his left index finger while cleaning packaging machinery during production. He received first aid on-site and was then transported to urgent care, where he received 8 stitches.
+
+The prompt response and appropriate medical treatment provided to Mr. Garcia were commendable. However, this incident represents a serious workplace safety failure that requires thorough investigation and comprehensive corrective actions to prevent recurrence.
+
+2. ROOT CAUSE ANALYSIS
+
+The direct cause of Mr. Garcia's injury was contact between his left index finger and the moving conveyor belt mechanism during cleaning activities. Several contributing factors were identified:
+
+Human Factors:
+- Lack of specific training on safe machinery cleaning procedures
+- Potential for employee distraction or rushing during production
+
+Environmental Factors: 
+- Inadequate machine guarding around moving conveyor components
+- Poor lighting and limited visibility in the packaging department
+
+Equipment Factors:
+- Outdated machinery design with exposed pinch points
+- Lack of lockout/tagout procedures for machinery maintenance
+
+Procedural Factors:
+- Absence of written safe work instructions for cleaning packaging lines
+- No defined protocols for machine isolation and verification of zero energy state
+
+These contributing factors point to systemic failures in Silver Bay Seafoods' safety management system, including insufficient hazard assessment, ineffective employee training, and inadequate engineering controls.
+
+3. REGULATORY IMPLICATIONS
+
+This injury is recordable under OSHA's 29 CFR 1904 Injury and Illness Recordkeeping Standard, as it resulted in medical treatment beyond first aid and lost work time. Silver Bay Seafoods is required to report the incident to OSHA within 24 hours, as it involved in-patient hospitalization. 
+
+Potential OSHA citations may include:
+- 29 CFR 1910.212 - Machine Guarding
+- 29 CFR 1910.147 - The Control of Hazardous Energy (Lockout/Tagout)
+- 29 CFR 1910.132 - Personal Protective Equipment
+
+4. CORRECTIVE ACTIONS
+
+Immediate Corrections (Priority 1):
+- Isolate and lockout/tagout all packaging line machinery to prevent further operation
+- Provide additional first aid training and supplies to the on-site medical team
+- Initiate incident reporting and investigation procedures
+
+Short-term Improvements (Priority 2):
+- Conduct a comprehensive machinery safety audit and retrofit guards on all exposed pinch points
+- Develop and implement detailed safe work instructions for cleaning packaging lines
+- Provide hands-on training to all packaging department employees on the new cleaning protocols
+
+Long-term Systemic Changes (Priority 3): 
+- Redesign packaging line machinery to eliminate or minimize identified hazards
+- Establish a preventive maintenance program to keep equipment in safe operating condition
+- Integrate lockout/tagout procedures into routine maintenance and cleaning activities
+- Enhance the company's safety management system to prioritize proactive hazard identification and control
+
+5. PREVENTION STRATEGY
+
+To prevent similar incidents, Silver Bay Seafoods should:
+
+- Conduct a thorough hazard assessment of the entire packaging department, identifying all potential machinery, ergonomic, and environmental risks
+- Implement an enhanced employee training program covering machinery operation, maintenance, and cleaning procedures, with a strong emphasis on hazard recognition and mitigation
+- Install additional engineering controls, such as fixed and interlocked machine guards, to eliminate or isolate hazardous moving components
+- Develop a comprehensive lockout/tagout program to ensure the safety of employees performing servicing and maintenance activities
+
+6. CASE CLOSURE RECOMMENDATION
+
+Based on the findings of this comprehensive investigation, I recommend that this case be closed upon completion of the Priority 1 and Priority 2 corrective actions. However, continuous monitoring and follow-up will be essential to ensure the long-term sustainability of the systemic changes outlined in the Priority 3 recommendations.
+
+Silver Bay Seafoods must demonstrate a strong commitment to workplace safety and a willingness to allocate the necessary resources to address the underlying safety management system deficiencies identified in this report. With the implementation of these corrective actions, the company can significantly enhance the safety of its packaging operations and prevent similar serious injuries from occurring in the future.
