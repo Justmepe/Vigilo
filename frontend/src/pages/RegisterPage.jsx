@@ -369,11 +369,11 @@ const RegisterPage = () => {
                   <div className="vr-frow">
                     <div className="vr-field">
                       <label className="vr-label" htmlFor="first_name">First Name<span className="vr-req">*</span></label>
-                      <input className="vr-input" id="first_name" type="text" value={form.first_name} onChange={set('first_name')} placeholder="Grace" autoComplete="given-name" disabled={isLoading} required />
+                      <input className="vr-input" id="first_name" type="text" value={form.first_name} onChange={set('first_name')} placeholder="John" autoComplete="given-name" disabled={isLoading} required />
                     </div>
                     <div className="vr-field">
                       <label className="vr-label" htmlFor="last_name">Last Name<span className="vr-req">*</span></label>
-                      <input className="vr-input" id="last_name" type="text" value={form.last_name} onChange={set('last_name')} placeholder="Akinyi" autoComplete="family-name" disabled={isLoading} required />
+                      <input className="vr-input" id="last_name" type="text" value={form.last_name} onChange={set('last_name')} placeholder="Smith" autoComplete="family-name" disabled={isLoading} required />
                     </div>
                   </div>
 
