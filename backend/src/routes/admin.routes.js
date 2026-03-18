@@ -29,6 +29,10 @@ router.put('/users/:id', adminController.updateUser);
 router.patch('/users/:id/toggle-active', adminController.toggleUserActive);
 router.post('/users/:id/reset-password', adminController.resetUserPassword);
 
+// ── Company Settings ───────────────────────────────────────────────────────────
+router.get('/settings', adminController.getCompanySettings);
+router.put('/settings', adminController.updateCompanySettings);
+
 // ── SharePoint Sync ────────────────────────────────────────────────────────────
 router.get('/sync/status', adminController.getSyncStatus);
 router.post('/sync/retry-failed', adminController.retryFailedSync);

@@ -13,6 +13,7 @@ import AdminDocuments from '../components/admin/AdminDocuments';
 import AdminUsers    from '../components/admin/AdminUsers';
 import AdminSync     from '../components/admin/AdminSync';
 import FormsTab      from '../components/admin/FormsTab';
+import SettingsTab   from '../components/admin/SettingsTab';
 
 // EHS section tabs (sample data)
 import DashboardTab   from '../components/admin/DashboardTab';
@@ -71,6 +72,7 @@ const SECTIONS = [
       { id: 'documents',   label: 'All Documents',   icon: FileText,        color: '#1d4ed8' },
       { id: 'users',       label: 'Users',           icon: UserCog,         color: '#64748b' },
       { id: 'sync',        label: 'SharePoint Sync', icon: Cloud,           color: '#0d9488' },
+      { id: 'settings',    label: 'Company Settings',icon: Settings,        color: '#7c3aed' },
     ],
   },
 ];
@@ -92,6 +94,7 @@ const PAGE_META = {
   documents:   { title: 'All Documents',        sub: 'Forms, reports & audits',          bg: '#dbeafe', color: '#1d4ed8' },
   users:       { title: 'User Management',      sub: 'Accounts, roles & access',         bg: '#f1f5f9', color: '#475569' },
   sync:        { title: 'SharePoint Sync',      sub: 'Cloud document integration',       bg: '#ccfbf1', color: '#0d9488' },
+  settings:    { title: 'Company Settings',     sub: 'Branding, contact & report config', bg: '#ede9fe', color: '#7c3aed' },
 };
 
 const AdminPage = () => {
@@ -199,6 +202,7 @@ const AdminPage = () => {
             {activeTab === 'documents'   && <AdminDocuments showArchived={false} />}
             {activeTab === 'users'       && <AdminUsers />}
             {activeTab === 'sync'        && <AdminSync />}
+            {activeTab === 'settings'    && <SettingsTab />}
           </div>
         </main>
       </div>

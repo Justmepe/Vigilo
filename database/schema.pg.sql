@@ -216,6 +216,34 @@ CREATE TABLE IF NOT EXISTS audit_findings (
 );
 
 -- ============================================================
+-- Company Settings (admin-editable, per company)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS company_settings (
+  id                    SERIAL PRIMARY KEY,
+  company_id            INTEGER REFERENCES companies(id),
+  -- Branding
+  company_name          TEXT,
+  company_logo_url      TEXT,
+  primary_color         TEXT DEFAULT '#0d1f35',
+  accent_color          TEXT DEFAULT '#c9943a',
+  -- Contact / Footer
+  contact_name          TEXT,
+  contact_email         TEXT,
+  contact_phone         TEXT,
+  physical_address      TEXT,
+  report_footer         TEXT,
+  report_header_note    TEXT,
+  -- Operational
+  industry              TEXT,
+  site_location         TEXT,
+  safety_officer        TEXT,
+  emergency_number      TEXT,
+  -- Timestamps
+  updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_by            INTEGER REFERENCES users(id)
+);
+
+-- ============================================================
 -- SEED: Audit Question Bank
 -- ============================================================
 INSERT INTO audit_question_bank (id, category, question, default_hazard, default_regulation, default_severity) VALUES

@@ -722,3 +722,67 @@ exports.retryFailedSync = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to retry' });
   }
 };
+
+// ─── Company Settings ──────────────────────────────────────────────────────────
+
+const SETTINGS_FIELDS = [
+  'company_name', 'company_logo_url', 'primary_color', 'accent_color',
+  'contact_name', 'contact_email', 'contact_phone', 'physical_address',
+  'report_footer', 'report_header_note',
+  'industry', 'site_location', 'safety_officer', 'emergency_number',
+];
+
+/**
+ * GET /api/admin/settings
+ */
+exports.getCompanySettings = async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const company_id = req.user.company_id || null;
+    const row = company_id
+      ? await db.getAsync('SELECT * FROM company_settings WHERE company_id = ?', [company_id])
+      : await db.getAsync('SELECT * FROM company_settings ORDER BY id ASC LIMIT 1');
+
+    res.json({ success: true, data: row || {} });
+  } catch (err) {
+    logger.error('getCompanySettings error:', err);
+    res.status(500).json({ success: false, message: 'Failed to load settings' });
+  }
+};
+
+/**
+ * PUT /api/admin/settings
+ */
+exports.updateCompanySettings = async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  try {
+    const company_id = req.user.company_id || null;
+    const values = SETTINGS_FIELDS.map(f => req.body[f] ?? null);
+    const now = new Date().toISOString();
+
+    const existing = company_id
+      ? await db.getAsync('SELECT id FROM company_settings WHERE company_id = ?', [company_id])
+      : await db.getAsync('SELECT id FROM company_settings ORDER BY id ASC LIMIT 1');
+
+    if (existing) {
+      const setClauses = SETTINGS_FIELDS.map(f => `${f} = ?`).join(', ');
+      await db.runAsync(
+        `UPDATE company_settings SET ${setClauses}, updated_at = ?, updated_by = ? WHERE id = ?`,
+        [...values, now, req.user.id, existing.id]
+      );
+    } else {
+      const cols = ['company_id', ...SETTINGS_FIELDS, 'updated_at', 'updated_by'].join(', ');
+      const placeholders = ['company_id', ...SETTINGS_FIELDS, 'updated_at', 'updated_by'].map(() => '?').join(', ');
+      await db.runAsync(
+        `INSERT INTO company_settings (${cols}) VALUES (${placeholders})`,
+        [company_id, ...values, now, req.user.id]
+      );
+    }
+
+    logger.info('Company settings updated', { adminId: req.user.id, company_id });
+    res.json({ success: true, message: 'Settings saved' });
+  } catch (err) {
+    logger.error('updateCompanySettings error:', err);
+    res.status(500).json({ success: false, message: 'Failed to save settings' });
+  }
+};
