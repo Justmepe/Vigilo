@@ -44,56 +44,48 @@ class FormsController {
       }
 
       // Save to database
-      return new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
-          [req.user?.id || null, 'jsa', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()],
-          function(err) {
-            if (err) {
-              logger.error('Failed to save JSA form to database', { error: err.message });
-              return reject(err);
-            }
+      const result = await db.runAsync(
+        'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
+        [req.user?.id || null, 'jsa', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()]
+      );
 
-            const formId = this.lastID;
-            const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
-            logger.info(`JSA form created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
+      const formId = result.id;
+      const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
+      logger.info(`JSA form created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
 
-            // Send immediate response to user
-            res.status(201).json({
-              success: true,
-              id: formId,
+      // Send immediate response to user
+      res.status(201).json({
+        success: true,
+        id: formId,
+        formId,
+        status: savedStatus,
+        message: savedStatus === 'draft' ? 'JSA draft saved successfully' : 'JSA form created and saved successfully',
+        data: {
+          formId,
+          date,
+          location,
+          jobTitle,
+          status: savedStatus,
+          createdAt: new Date().toISOString()
+        }
+      });
+
+      // Generate AI report asynchronously — only for submitted forms, not drafts
+      if (savedStatus !== 'draft') {
+        setImmediate(async () => {
+          try {
+            const pdfData = {
               formId,
-              status: savedStatus,
-              message: savedStatus === 'draft' ? 'JSA draft saved successfully' : 'JSA form created and saved successfully',
-              data: {
-                formId,
-                date,
-                location,
-                jobTitle,
-                status: savedStatus,
-                createdAt: new Date().toISOString()
-              }
-            });
-
-            // Generate AI report asynchronously — only for submitted forms, not drafts
-            if (savedStatus !== 'draft') {
-              setImmediate(async () => {
-                try {
-                  const pdfData = {
-                    formId,
-                    formType: 'jsa',
-                    formData: req.body,
-                    userId: req.user?.id
-                  };
-                  await AIReportGenerator.generateReportAsync(formId, pdfData);
-                } catch (aiError) {
-                  logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
-                }
-              });
-            }
+              formType: 'jsa',
+              formData: req.body,
+              userId: req.user?.id
+            };
+            await AIReportGenerator.generateReportAsync(formId, pdfData);
+          } catch (aiError) {
+            logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
           }
-        );
-      }).catch(error => next(error));
+        });
+      }
     } catch (error) {
       next(error);
     }
@@ -120,41 +112,33 @@ class FormsController {
       }
 
       // Save to database
-      return new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
-          [req.user?.id || null, 'injury', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()],
-          function(err) {
-            if (err) {
-              logger.error('Failed to save injury report to database', { error: err.message });
-              return reject(err);
-            }
+      const result = await db.runAsync(
+        'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
+        [req.user?.id || null, 'injury', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()]
+      );
 
-            const formId = this.lastID;
-            const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
-            logger.info(`Injury report created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
+      const formId = result.id;
+      const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
+      logger.info(`Injury report created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
 
-            res.status(201).json({
-              success: true,
-              id: formId,
-              formId,
-              status: savedStatus,
-              message: savedStatus === 'draft' ? 'Injury report draft saved' : 'Injury report created and saved successfully',
-              data: { formId, incidentDate, incidentLocation, description, employeeName, bodyPartAffected, injuryType, status: savedStatus, createdAt: new Date().toISOString() }
-            });
+      res.status(201).json({
+        success: true,
+        id: formId,
+        formId,
+        status: savedStatus,
+        message: savedStatus === 'draft' ? 'Injury report draft saved' : 'Injury report created and saved successfully',
+        data: { formId, incidentDate, incidentLocation, description, employeeName, bodyPartAffected, injuryType, status: savedStatus, createdAt: new Date().toISOString() }
+      });
 
-            if (savedStatus !== 'draft') {
-              setImmediate(async () => {
-                try {
-                  await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'injury', formData: req.body, userId: req.user?.id });
-                } catch (aiError) {
-                  logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
-                }
-              });
-            }
+      if (savedStatus !== 'draft') {
+        setImmediate(async () => {
+          try {
+            await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'injury', formData: req.body, userId: req.user?.id });
+          } catch (aiError) {
+            logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
           }
-        );
-      }).catch(error => next(error));
+        });
+      }
     } catch (error) {
       next(error);
     }
@@ -187,41 +171,33 @@ class FormsController {
       }
 
       // Save to database
-      return new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
-          [req.user?.id || null, 'loto', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()],
-          function(err) {
-            if (err) {
-              logger.error('Failed to save LOTO form to database', { error: err.message });
-              return reject(err);
-            }
+      const result = await db.runAsync(
+        'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
+        [req.user?.id || null, 'loto', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()]
+      );
 
-            const formId = this.lastID;
-            const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
-            logger.info(`LOTO form created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
+      const formId = result.id;
+      const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
+      logger.info(`LOTO form created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
 
-            res.status(201).json({
-              success: true,
-              id: formId,
-              formId,
-              status: savedStatus,
-              message: savedStatus === 'draft' ? 'LOTO draft saved' : 'LOTO form created and saved successfully',
-              data: { formId, equipmentName, authorizedBy, status: savedStatus, createdAt: new Date().toISOString() }
-            });
+      res.status(201).json({
+        success: true,
+        id: formId,
+        formId,
+        status: savedStatus,
+        message: savedStatus === 'draft' ? 'LOTO draft saved' : 'LOTO form created and saved successfully',
+        data: { formId, equipmentName, authorizedBy, status: savedStatus, createdAt: new Date().toISOString() }
+      });
 
-            if (savedStatus !== 'draft') {
-              setImmediate(async () => {
-                try {
-                  await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'loto', formData: req.body, userId: req.user?.id });
-                } catch (aiError) {
-                  logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
-                }
-              });
-            }
+      if (savedStatus !== 'draft') {
+        setImmediate(async () => {
+          try {
+            await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'loto', formData: req.body, userId: req.user?.id });
+          } catch (aiError) {
+            logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
           }
-        );
-      }).catch(error => next(error));
+        });
+      }
     } catch (error) {
       next(error);
     }
@@ -246,41 +222,33 @@ class FormsController {
       }
 
       // Save to database
-      return new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
-          [req.user?.id || null, 'accident', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()],
-          function(err) {
-            if (err) {
-              logger.error('Failed to save accident report to database', { error: err.message });
-              return reject(err);
-            }
+      const result = await db.runAsync(
+        'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
+        [req.user?.id || null, 'accident', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()]
+      );
 
-            const formId = this.lastID;
-            const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
-            logger.info(`Accident report created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
+      const formId = result.id;
+      const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
+      logger.info(`Accident report created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
 
-            res.status(201).json({
-              success: true,
-              id: formId,
-              formId,
-              status: savedStatus,
-              message: savedStatus === 'draft' ? 'Accident report draft saved' : 'Accident report created and saved successfully',
-              data: { formId, accidentDate, location, driverName, accidentDescription, status: savedStatus, createdAt: new Date().toISOString() }
-            });
+      res.status(201).json({
+        success: true,
+        id: formId,
+        formId,
+        status: savedStatus,
+        message: savedStatus === 'draft' ? 'Accident report draft saved' : 'Accident report created and saved successfully',
+        data: { formId, accidentDate, location, driverName, accidentDescription, status: savedStatus, createdAt: new Date().toISOString() }
+      });
 
-            if (savedStatus !== 'draft') {
-              setImmediate(async () => {
-                try {
-                  await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'accident', formData: req.body, userId: req.user?.id });
-                } catch (aiError) {
-                  logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
-                }
-              });
-            }
+      if (savedStatus !== 'draft') {
+        setImmediate(async () => {
+          try {
+            await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'accident', formData: req.body, userId: req.user?.id });
+          } catch (aiError) {
+            logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
           }
-        );
-      }).catch(error => next(error));
+        });
+      }
     } catch (error) {
       next(error);
     }
@@ -306,41 +274,33 @@ class FormsController {
       }
 
       // Save to database
-      return new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
-          [req.user?.id || null, 'spill', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()],
-          function(err) {
-            if (err) {
-              logger.error('Failed to save spill report to database', { error: err.message });
-              return reject(err);
-            }
+      const result = await db.runAsync(
+        'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
+        [req.user?.id || null, 'spill', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()]
+      );
 
-            const formId = this.lastID;
-            const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
-            logger.info(`Spill report created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
+      const formId = result.id;
+      const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
+      logger.info(`Spill report created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
 
-            res.status(201).json({
-              success: true,
-              id: formId,
-              formId,
-              status: savedStatus,
-              message: savedStatus === 'draft' ? 'Spill report draft saved' : 'Spill report created and saved successfully',
-              data: { formId, incidentDate, location, materialName, quantity, reportedBy, status: savedStatus, createdAt: new Date().toISOString() }
-            });
+      res.status(201).json({
+        success: true,
+        id: formId,
+        formId,
+        status: savedStatus,
+        message: savedStatus === 'draft' ? 'Spill report draft saved' : 'Spill report created and saved successfully',
+        data: { formId, incidentDate, location, materialName, quantity, reportedBy, status: savedStatus, createdAt: new Date().toISOString() }
+      });
 
-            if (savedStatus !== 'draft') {
-              setImmediate(async () => {
-                try {
-                  await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'spill', formData: req.body, userId: req.user?.id });
-                } catch (aiError) {
-                  logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
-                }
-              });
-            }
+      if (savedStatus !== 'draft') {
+        setImmediate(async () => {
+          try {
+            await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'spill', formData: req.body, userId: req.user?.id });
+          } catch (aiError) {
+            logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
           }
-        );
-      }).catch(error => next(error));
+        });
+      }
     } catch (error) {
       next(error);
     }
@@ -364,49 +324,41 @@ class FormsController {
       }
 
       // Save to database
-      return new Promise((resolve, reject) => {
-        db.run(
-          'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
-          [req.user?.id || null, 'inspection', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()],
-          function(err) {
-            if (err) {
-              logger.error('Failed to save inspection form to database', { error: err.message });
-              return reject(err);
-            }
+      const result = await db.runAsync(
+        'INSERT INTO forms (user_id, form_type, form_data, status, created_at) VALUES (?, ?, ?, ?, ?)',
+        [req.user?.id || null, 'inspection', JSON.stringify(req.body), req.body.status === 'draft' ? 'draft' : 'submitted', new Date().toISOString()]
+      );
 
-            const formId = this.lastID;
-            const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
-            logger.info(`Inspection form created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
+      const formId = result.id;
+      const savedStatus = req.body.status === 'draft' ? 'draft' : 'submitted';
+      logger.info(`Inspection form created and saved: ${formId} (${savedStatus})`, { userId: req.user?.id });
 
-            // Send immediate response to user
-            res.status(201).json({
-              success: true,
-              id: formId,
-              formId,
-              status: savedStatus,
-              message: savedStatus === 'draft' ? 'Inspection draft saved' : 'Inspection form created and saved successfully',
-              data: {
-                formId,
-                inspectionDate,
-                inspectionArea,
-                inspectorName,
-                status: savedStatus,
-                createdAt: new Date().toISOString()
-              }
-            });
+      // Send immediate response to user
+      res.status(201).json({
+        success: true,
+        id: formId,
+        formId,
+        status: savedStatus,
+        message: savedStatus === 'draft' ? 'Inspection draft saved' : 'Inspection form created and saved successfully',
+        data: {
+          formId,
+          inspectionDate,
+          inspectionArea,
+          inspectorName,
+          status: savedStatus,
+          createdAt: new Date().toISOString()
+        }
+      });
 
-            if (savedStatus !== 'draft') {
-              setImmediate(async () => {
-                try {
-                  await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'inspection', formData: req.body, userId: req.user?.id });
-                } catch (aiError) {
-                  logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
-                }
-              });
-            }
+      if (savedStatus !== 'draft') {
+        setImmediate(async () => {
+          try {
+            await AIReportGenerator.generateReportAsync(formId, { formId, formType: 'inspection', formData: req.body, userId: req.user?.id });
+          } catch (aiError) {
+            logger.warn(`Background AI report generation failed for form ${formId}`, { error: aiError.message });
           }
-        );
-      }).catch(error => next(error));
+        });
+      }
     } catch (error) {
       next(error);
     }
@@ -427,59 +379,49 @@ class FormsController {
         throw new ValidationError('formData is required');
       }
 
-      return new Promise((resolve, reject) => {
-        // First check the form exists and belongs to this user
-        db.get(
-          'SELECT id, form_type, status, user_id FROM forms WHERE id = ?',
-          [formId],
-          (err, row) => {
-            if (err) return reject(err);
-            if (!row) {
-              return res.status(404).json({ success: false, message: `Form ${formId} not found` });
-            }
+      // First check the form exists and belongs to this user
+      const row = await db.getAsync(
+        'SELECT id, form_type, status, user_id FROM forms WHERE id = ?',
+        [formId]
+      );
 
-            const wasSubmitted = row.status === 'submitted';
-            const formDataJson = JSON.stringify(newFormData);
+      if (!row) {
+        return res.status(404).json({ success: false, message: `Form ${formId} not found` });
+      }
 
-            db.run(
-              'UPDATE forms SET form_data = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-              [formDataJson, newStatus, formId],
-              function(updateErr) {
-                if (updateErr) {
-                  logger.error('Failed to update form', { error: updateErr.message, formId });
-                  return reject(updateErr);
-                }
+      const wasSubmitted = row.status === 'submitted';
+      const formDataJson = JSON.stringify(newFormData);
 
-                logger.info(`Form ${formId} updated to ${newStatus}`, { userId });
+      await db.runAsync(
+        'UPDATE forms SET form_data = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [formDataJson, newStatus, formId]
+      );
 
-                res.status(200).json({
-                  success: true,
-                  id: parseInt(formId),
-                  formId: parseInt(formId),
-                  status: newStatus,
-                  message: newStatus === 'draft' ? 'Draft saved successfully' : 'Form submitted successfully'
-                });
+      logger.info(`Form ${formId} updated to ${newStatus}`, { userId });
 
-                // If transitioning from draft → submitted, trigger AI report
-                if (!wasSubmitted && newStatus === 'submitted') {
-                  setImmediate(async () => {
-                    try {
-                      await AIReportGenerator.generateReportAsync(parseInt(formId), {
-                        formId: parseInt(formId),
-                        formType: row.form_type,
-                        formData: newFormData,
-                        userId
-                      });
-                    } catch (aiError) {
-                      logger.warn(`AI report generation failed for updated form ${formId}`, { error: aiError.message });
-                    }
-                  });
-                }
-              }
-            );
+      res.status(200).json({
+        success: true,
+        id: parseInt(formId),
+        formId: parseInt(formId),
+        status: newStatus,
+        message: newStatus === 'draft' ? 'Draft saved successfully' : 'Form submitted successfully'
+      });
+
+      // If transitioning from draft → submitted, trigger AI report
+      if (!wasSubmitted && newStatus === 'submitted') {
+        setImmediate(async () => {
+          try {
+            await AIReportGenerator.generateReportAsync(parseInt(formId), {
+              formId: parseInt(formId),
+              formType: row.form_type,
+              formData: newFormData,
+              userId
+            });
+          } catch (aiError) {
+            logger.warn(`AI report generation failed for updated form ${formId}`, { error: aiError.message });
           }
-        );
-      }).catch(error => next(error));
+        });
+      }
     } catch (error) {
       next(error);
     }
@@ -539,38 +481,30 @@ class FormsController {
     try {
       const { formId } = req.params;
 
-      return new Promise((resolve, reject) => {
-        db.get(
-          'SELECT id, user_id, form_type, form_data, status, created_at FROM forms WHERE id = ?',
-          [formId],
-          (err, row) => {
-            if (err) {
-              logger.error('Failed to retrieve form from database', { error: err.message, formId });
-              return reject(err);
-            }
+      const row = await db.getAsync(
+        'SELECT id, user_id, form_type, form_data, status, created_at FROM forms WHERE id = ?',
+        [formId]
+      );
 
-            if (!row) {
-              return res.status(404).json({
-                success: false,
-                message: `Form ${formId} not found`
-              });
-            }
+      if (!row) {
+        return res.status(404).json({
+          success: false,
+          message: `Form ${formId} not found`
+        });
+      }
 
-            logger.info(`Form retrieved: ${formId}`, { userId: req.user?.id });
+      logger.info(`Form retrieved: ${formId}`, { userId: req.user?.id });
 
-            return res.status(200).json({
-              success: true,
-              data: {
-                id: row.id,
-                formType: row.form_type,
-                formData: JSON.parse(row.form_data),
-                status: row.status,
-                createdAt: row.created_at
-              }
-            });
-          }
-        );
-      }).catch(error => next(error));
+      return res.status(200).json({
+        success: true,
+        data: {
+          id: row.id,
+          formType: row.form_type,
+          formData: JSON.parse(row.form_data),
+          status: row.status,
+          createdAt: row.created_at
+        }
+      });
     } catch (error) {
       next(error);
     }
@@ -587,75 +521,62 @@ class FormsController {
       const offset = (parseInt(page) - 1) * parseInt(limit);
       const userId = req.user?.id || null;
 
-      return new Promise((resolve, reject) => {
-        // Build query — always filter by user_id so users only see their own forms
-        const conditions = [];
-        const params = [];
+      // Build query — always filter by user_id so users only see their own forms
+      const conditions = [];
+      const params = [];
 
-        if (userId) {
-          conditions.push('user_id = ?');
-          params.push(userId);
-        }
-        if (type) {
-          conditions.push('form_type = ?');
-          params.push(type);
-        }
-        if (status) {
-          conditions.push('status = ?');
-          params.push(status);
-        }
+      if (userId) {
+        conditions.push('user_id = ?');
+        params.push(userId);
+      }
+      if (type) {
+        conditions.push('form_type = ?');
+        params.push(type);
+      }
+      if (status) {
+        conditions.push('status = ?');
+        params.push(status);
+      }
 
-        const where = conditions.length ? ' WHERE ' + conditions.join(' AND ') : '';
-        const query = `SELECT id, user_id, form_type, form_data, status, created_at, updated_at FROM forms${where} ORDER BY COALESCE(updated_at, created_at) DESC LIMIT ? OFFSET ?`;
-        params.push(parseInt(limit), offset);
+      const where = conditions.length ? ' WHERE ' + conditions.join(' AND ') : '';
+      const query = `SELECT id, user_id, form_type, form_data, status, created_at, updated_at FROM forms${where} ORDER BY COALESCE(updated_at, created_at) DESC LIMIT ? OFFSET ?`;
+      const queryParams = [...params, parseInt(limit), offset];
 
-        db.all(query, params, (err, rows) => {
-          if (err) {
-            logger.error('Failed to retrieve forms list from database', { error: err.message });
-            return reject(err);
+      const rows = await db.allAsync(query, queryParams);
+
+      const countParams = conditions.length ? [...params] : [];
+      const countQuery = `SELECT COUNT(*) as count FROM forms${where}`;
+      const countRow = await db.getAsync(countQuery, countParams);
+
+      logger.info('Forms list retrieved', { userId, type, status, count: rows?.length || 0 });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          forms: (rows || []).map(row => {
+            let parsed = {};
+            try { parsed = JSON.parse(row.form_data || '{}'); } catch (_) {}
+            return {
+              id: row.id,
+              formType: row.form_type,
+              status: row.status,
+              facility: parsed.facility || '',
+              title: parsed.jobTitle || parsed.equipmentName || parsed.employeeName || parsed.inspectionArea || parsed.materialName || '',
+              location: parsed.location || parsed.incidentLocation || parsed.inspectionArea || '',
+              date: parsed.date || parsed.incidentDate || parsed.accidentDate || parsed.inspectionDate || '',
+              revisionNumber: parsed.revisionNumber || '0',
+              createdAt: row.created_at,
+              updatedAt: row.updated_at
+            };
+          }),
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total: countRow?.count || 0,
+            totalPages: Math.ceil((countRow?.count || 0) / parseInt(limit))
           }
-
-          const countParams = conditions.length ? [...params.slice(0, conditions.length)] : [];
-          const countQuery = `SELECT COUNT(*) as count FROM forms${where}`;
-
-          db.get(countQuery, countParams, (countErr, countRow) => {
-            if (countErr) {
-              logger.error('Failed to count forms', { error: countErr.message });
-              return reject(countErr);
-            }
-
-            logger.info('Forms list retrieved', { userId, type, status, count: rows?.length || 0 });
-
-            return res.status(200).json({
-              success: true,
-              data: {
-                forms: (rows || []).map(row => {
-                  let parsed = {};
-                  try { parsed = JSON.parse(row.form_data || '{}'); } catch (_) {}
-                  return {
-                    id: row.id,
-                    formType: row.form_type,
-                    status: row.status,
-                    facility: parsed.facility || '',
-                    title: parsed.jobTitle || parsed.equipmentName || parsed.employeeName || parsed.inspectionArea || parsed.materialName || '',
-                    location: parsed.location || parsed.incidentLocation || parsed.inspectionArea || '',
-                    date: parsed.date || parsed.incidentDate || parsed.accidentDate || parsed.inspectionDate || '',
-                    revisionNumber: parsed.revisionNumber || '0',
-                    createdAt: row.created_at,
-                    updatedAt: row.updated_at
-                  };
-                }),
-                pagination: {
-                  page: parseInt(page),
-                  limit: parseInt(limit),
-                  total: countRow?.count || 0,
-                  totalPages: Math.ceil((countRow?.count || 0) / parseInt(limit))
-                }
-              }
-            });
-          });
-        });
-      }).catch(error => next(error));
+        }
+      });
     } catch (error) {
       next(error);
     }
@@ -720,71 +641,55 @@ class FormsController {
       const formId = req.params.id;
 
       // Create pdfs directory if it doesn't exist
-      const formsDir = path.join(process.cwd(), 'backend', 'pdfs');
+      const formsDir = path.join(__dirname, '../../pdfs');
       if (!fs.existsSync(formsDir)) {
         fs.mkdirSync(formsDir, { recursive: true });
       }
 
       // Get form from database
-      return new Promise((resolve, reject) => {
-        db.get(
-          'SELECT id, user_id, form_type, form_data, created_at, ai_report, ai_report_generated_at, ai_provider FROM forms WHERE id = ?',
-          [formId],
-          async (err, row) => {
-            if (err) return reject(err);
-            if (!row) {
-              return res.status(404).json({
-                success: false,
-                message: `Form ${formId} not found`
-              });
-            }
+      const row = await db.getAsync(
+        'SELECT id, user_id, form_type, form_data, created_at, ai_report, ai_report_generated_at, ai_provider FROM forms WHERE id = ?',
+        [formId]
+      );
 
-            let formData;
-            try {
-              formData = JSON.parse(row.form_data);
-            } catch (parseErr) {
-              formData = row.form_data;
-            }
+      if (!row) {
+        return res.status(404).json({ success: false, message: `Form ${formId} not found` });
+      }
 
-            const pdfFormData = {
-              formId: row.id,
-              formType: row.form_type,
-              userId: row.user_id,
-              formData: formData,
-              submittedAt: row.created_at,
-              photos: formData.attachedPhotos || formData.photos || [],
-              ai_report: row.ai_report,
-              ai_report_generated_at: row.ai_report_generated_at,
-              ai_provider: row.ai_provider
-            };
+      let formData;
+      try {
+        formData = typeof row.form_data === 'string' ? JSON.parse(row.form_data) : row.form_data;
+      } catch (parseErr) {
+        formData = row.form_data;
+      }
 
-            // Trigger AI report generation if not yet generated - WAIT FOR IT TO COMPLETE
-            if (!pdfFormData.ai_report && AIReportGenerator) {
-              logger.info(`[PDF] AI report not found for ${formId}, generating before PDF export...`, { formId });
-              
-              try {
-                // AWAIT the AI report generation before proceeding
-                const generatedReport = await AIReportGenerator.generateReportAsync(formId, pdfFormData);
-                
-                if (generatedReport) {
-                  // Report was generated, update pdfFormData with it
-                  pdfFormData.ai_report = generatedReport;
-                  logger.info(`[PDF] AI report generated successfully, including in PDF`, { formId });
-                } else {
-                  logger.warn(`[PDF] AI report generation returned null`, { formId });
-                }
-              } catch (err) {
-                logger.error(`[PDF] AI report generation failed during PDF export`, { formId, error: err.message });
-                // Continue without report - don't fail the entire PDF
-              }
-            }
+      const pdfFormData = {
+        formId: row.id,
+        formType: row.form_type,
+        userId: row.user_id,
+        formData: formData,
+        submittedAt: row.created_at,
+        photos: formData.attachedPhotos || formData.photos || [],
+        ai_report: row.ai_report,
+        ai_report_generated_at: row.ai_report_generated_at,
+        ai_provider: row.ai_provider
+      };
 
-            // Now that AI report is complete, generate and send PDF
-            generateAndSendPDF(res, pdfFormData, formId)
-              .catch(err => next(err));
+      // Trigger AI report generation if not yet generated
+      if (!pdfFormData.ai_report && AIReportGenerator) {
+        logger.info(`[PDF] AI report not found for ${formId}, generating before PDF export...`, { formId });
+        try {
+          const generatedReport = await AIReportGenerator.generateReportAsync(formId, pdfFormData);
+          if (generatedReport) {
+            pdfFormData.ai_report = generatedReport;
+            logger.info(`[PDF] AI report generated successfully, including in PDF`, { formId });
           }
-        );
-      });
+        } catch (err) {
+          logger.error(`[PDF] AI report generation failed during PDF export`, { formId, error: err.message });
+        }
+      }
+
+      await generateAndSendPDF(res, pdfFormData, formId);
 
       // Helper function to generate PDF
       async function generateAndSendPDF(res, formData, formId) {
@@ -1629,33 +1534,25 @@ class FormsController {
     try {
       const { formId } = req.params;
 
-      return new Promise((resolve, reject) => {
-        db.run(
-          'DELETE FROM forms WHERE id = ?',
-          [formId],
-          function(err) {
-            if (err) {
-              logger.error('Failed to delete form from database', { error: err.message, formId });
-              return reject(err);
-            }
+      const result = await db.runAsync(
+        'DELETE FROM forms WHERE id = ?',
+        [formId]
+      );
 
-            if (this.changes === 0) {
-              return res.status(404).json({
-                success: false,
-                message: `Form ${formId} not found`
-              });
-            }
+      if (result.changes === 0) {
+        return res.status(404).json({
+          success: false,
+          message: `Form ${formId} not found`
+        });
+      }
 
-            logger.info(`Form deleted: ${formId}`, { userId: req.user?.id });
+      logger.info(`Form deleted: ${formId}`, { userId: req.user?.id });
 
-            return res.status(200).json({
-              success: true,
-              message: 'Form deleted successfully',
-              data: { formId }
-            });
-          }
-        );
-      }).catch(error => next(error));
+      return res.status(200).json({
+        success: true,
+        message: 'Form deleted successfully',
+        data: { formId }
+      });
     } catch (error) {
       next(error);
     }
@@ -1774,65 +1671,63 @@ class FormsController {
       const monthStartStr = monthStart.toISOString();
       const weekStartStr  = weekStart.toISOString();
 
-      return new Promise((resolve) => {
-        // Query the database for submitted forms this month
-        db.all(
+      // Query the database for submitted forms this month
+      let rows = [];
+      try {
+        rows = await db.allAsync(
           `SELECT id, form_type, created_at FROM forms
            WHERE user_id = ? AND status = 'submitted' AND created_at >= ?
            ORDER BY created_at DESC`,
-          [userId, monthStartStr],
-          (err, rows) => {
-            if (err) {
-              logger.error('DB error in getDashboardStats', { error: err.message });
-              rows = [];
-            }
-
-            const reportsThisMonth = rows.length;
-
-            const inspectionsThisWeek = rows.filter(r =>
-              (r.form_type === 'monthlyInspection' || r.form_type === 'inspection') &&
-              new Date(r.created_at) >= weekStart
-            ).length;
-
-            const formTypeNames = {
-              jsa:              'JSA Completed',
-              loto:             'LOTO Procedure',
-              injury:           'Injury Reported',
-              accident:         'Accident Report',
-              spill:            'Spill Report Submitted',
-              spillReport:      'Spill Report Submitted',
-              inspection:       'Safety Inspection',
-              monthlyInspection:'Monthly Inspection'
-            };
-            const icons = {
-              jsa: '📋', loto: '🔒', injury: '⚠️', accident: '⚡',
-              spill: '🚨', spillReport: '🚨', inspection: '✅', monthlyInspection: '✅'
-            };
-
-            const recentActivity = rows.slice(0, 5).map(form => ({
-              id:          form.id,
-              formType:    form.form_type,
-              title:       formTypeNames[form.form_type] || 'Form Submitted',
-              icon:        icons[form.form_type] || '📝',
-              description: FormsController.getTimeAgoString(new Date(form.created_at)),
-              timestamp:   new Date(form.created_at).toLocaleString()
-            }));
-
-            const pendingActionItems = 3;
-
-            logger.info('Dashboard stats generated', {
-              userId,
-              inspectionsThisWeek,
-              reportsThisMonth,
-              recentActivityCount: recentActivity.length
-            });
-
-            resolve(res.status(200).json({
-              success: true,
-              data: { inspectionsThisWeek, pendingActionItems, reportsThisMonth, recentActivity }
-            }));
-          }
+          [userId, monthStartStr]
         );
+      } catch (err) {
+        logger.error('DB error in getDashboardStats', { error: err.message });
+        rows = [];
+      }
+
+      const reportsThisMonth = rows.length;
+
+      const inspectionsThisWeek = rows.filter(r =>
+        (r.form_type === 'monthlyInspection' || r.form_type === 'inspection') &&
+        new Date(r.created_at) >= weekStart
+      ).length;
+
+      const formTypeNames = {
+        jsa:              'JSA Completed',
+        loto:             'LOTO Procedure',
+        injury:           'Injury Reported',
+        accident:         'Accident Report',
+        spill:            'Spill Report Submitted',
+        spillReport:      'Spill Report Submitted',
+        inspection:       'Safety Inspection',
+        monthlyInspection:'Monthly Inspection'
+      };
+      const icons = {
+        jsa: '📋', loto: '🔒', injury: '⚠️', accident: '⚡',
+        spill: '🚨', spillReport: '🚨', inspection: '✅', monthlyInspection: '✅'
+      };
+
+      const recentActivity = rows.slice(0, 5).map(form => ({
+        id:          form.id,
+        formType:    form.form_type,
+        title:       formTypeNames[form.form_type] || 'Form Submitted',
+        icon:        icons[form.form_type] || '📝',
+        description: FormsController.getTimeAgoString(new Date(form.created_at)),
+        timestamp:   new Date(form.created_at).toLocaleString()
+      }));
+
+      const pendingActionItems = 3;
+
+      logger.info('Dashboard stats generated', {
+        userId,
+        inspectionsThisWeek,
+        reportsThisMonth,
+        recentActivityCount: recentActivity.length
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: { inspectionsThisWeek, pendingActionItems, reportsThisMonth, recentActivity }
       });
     } catch (error) {
       logger.error('Error generating dashboard stats', { error: error.message });
