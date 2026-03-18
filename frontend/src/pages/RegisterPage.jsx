@@ -338,7 +338,7 @@ const RegisterPage = () => {
 
                   <div className="vr-field">
                     <label className="vr-label" htmlFor="site_location">Primary Site / Facility Name<span className="vr-req">*</span></label>
-                    <input className="vr-input" id="site_location" type="text" value={form.site_location} onChange={set('site_location')} placeholder="e.g. Nairobi North Plant" disabled={isLoading} required />
+                    <input className="vr-input" id="site_location" type="text" value={form.site_location} onChange={set('site_location')} placeholder="e.g. Kodiak Processing Plant" disabled={isLoading} required />
                     <div className="vr-hint">The main facility this workspace is set up for. More sites can be added later.</div>
                   </div>
 
