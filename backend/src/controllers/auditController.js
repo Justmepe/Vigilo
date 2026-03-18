@@ -4,6 +4,26 @@
 const db = require('../config/database');
 const logger = require('../utils/logger');
 const auditDocumentService = require('../services/auditDocumentService');
+const { execFile } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+async function convertDocxToPdf(docxBuffer) {
+  const tmpDir  = os.tmpdir();
+  const tmpDocx = path.join(tmpDir, `audit_${Date.now()}.docx`);
+  const tmpPdf  = tmpDocx.replace('.docx', '.pdf');
+  fs.writeFileSync(tmpDocx, docxBuffer);
+  await new Promise((resolve, reject) => {
+    const soffice = process.platform === 'win32' ? 'soffice'
+      : (fs.existsSync('/usr/bin/libreoffice') ? '/usr/bin/libreoffice' : 'libreoffice');
+    execFile(soffice, ['--headless', '--convert-to', 'pdf', '--outdir', tmpDir, tmpDocx],
+      { timeout: 30000 }, (err) => err ? reject(new Error('LibreOffice: ' + err.message)) : resolve());
+  });
+  const buf = fs.readFileSync(tmpPdf);
+  try { fs.unlinkSync(tmpDocx); fs.unlinkSync(tmpPdf); } catch (_) {}
+  return buf;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -299,6 +319,28 @@ exports.exportDocx = async (req, res) => {
   } catch (err) {
     logger.error('exportDocx error:', err);
     res.status(500).json({ success: false, message: 'Failed to generate document' });
+  }
+};
+
+exports.exportPdf = async (req, res) => {
+  try {
+    const audit = await db.getAsync('SELECT * FROM audit_forms WHERE id = ?', [req.params.id]);
+    if (!audit) return res.status(404).json({ success: false, message: 'Audit not found' });
+    const findings = await db.allAsync(
+      'SELECT * FROM audit_findings WHERE audit_id = ? ORDER BY finding_number', [req.params.id]
+    );
+    try { audit.audit_areas = JSON.parse(audit.audit_areas); } catch { audit.audit_areas = []; }
+
+    const docxBuffer = await auditDocumentService.generateDocx(audit, findings);
+    const pdfBuffer  = await convertDocxToPdf(docxBuffer);
+    const filename = `OSHA_Audit_${audit.facility_name.replace(/\s+/g, '_')}_${audit.audit_date}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    logger.error('exportPdf error:', err);
+    res.status(500).json({ success: false, message: 'Failed to generate PDF: ' + err.message });
   }
 };
 

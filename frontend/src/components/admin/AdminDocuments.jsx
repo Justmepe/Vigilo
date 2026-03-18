@@ -123,10 +123,16 @@ const DocumentDetailModal = ({ doc, onClose, onStatusChange, onArchive, onSync, 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 p-5 border-t bg-gray-50">
           <button
-            onClick={() => onDownload(doc)}
-            className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1"
+            onClick={() => onDownload(doc, 'docx')}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1"
           >
-            <Download size={14} /> Download
+            <Download size={14} /> Word
+          </button>
+          <button
+            onClick={() => onDownload(doc, 'pdf')}
+            className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-1"
+          >
+            <Download size={14} /> PDF
           </button>
           {!doc.has_ai_report && (
             <button
@@ -286,20 +292,28 @@ const AdminDocuments = ({ showArchived = false }) => {
     }
   };
 
-  const handleDownload = async (doc) => {
+  const handleDownload = async (doc, format = 'docx') => {
     try {
-      const url = doc.source === 'audit'
-        ? `/api/audit/${doc.id}/export-docx`
-        : `/api/forms/${doc.id}/export-pdf`;
+      let url;
+      let defaultName;
+      if (doc.source === 'audit') {
+        url = format === 'pdf' ? `/api/audit/${doc.id}/export-pdf` : `/api/audit/${doc.id}/export-docx`;
+        defaultName = `audit-${doc.id}.${format}`;
+      } else {
+        url = format === 'pdf' ? `/api/forms/${doc.id}/export-pdf` : `/api/forms/${doc.id}/export-docx`;
+        defaultName = `${doc.form_type || 'form'}-${doc.id}.${format}`;
+      }
+      flash(`Preparing ${format.toUpperCase()}…`);
       const token = localStorage.getItem('authToken');
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = doc.source === 'audit' ? `audit-${doc.id}.docx` : `${doc.form_type || 'form'}-${doc.id}.pdf`;
+      a.download = defaultName;
       a.click();
       URL.revokeObjectURL(a.href);
+      setActionMsg(null);
     } catch (err) {
       flash('Download failed: ' + err.message, true);
     }
@@ -439,11 +453,18 @@ const AdminDocuments = ({ showArchived = false }) => {
                           <Eye size={15} />
                         </button>
                         <button
-                          onClick={() => handleDownload(doc)}
-                          title="Download"
-                          className="p-1 text-gray-400 hover:text-green-600"
+                          onClick={() => handleDownload(doc, 'docx')}
+                          title="Download Word"
+                          className="p-1 text-gray-400 hover:text-blue-600"
                         >
                           <Download size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDownload(doc, 'pdf')}
+                          title="Download PDF"
+                          className="p-1 text-gray-400 hover:text-red-600 text-xs font-bold"
+                        >
+                          PDF
                         </button>
                         {!doc.archived_at ? (
                           <button

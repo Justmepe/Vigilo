@@ -33,6 +33,7 @@ router.delete('/:id', authMiddleware, auditController.deleteAudit);
 
 // Document export
 router.get('/:id/export-docx', authMiddleware, auditController.exportDocx);
+router.get('/:id/export-pdf',  authMiddleware, auditController.exportPdf);
 
 // Findings management
 router.get('/:id/findings', authMiddleware, auditController.getFindings);

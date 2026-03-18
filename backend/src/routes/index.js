@@ -77,7 +77,8 @@ router.post('/uploads/photos',
 // Generic form endpoints
 router.get('/forms', authMiddleware, FormsController.getFormsList);
 router.post('/forms/submit', authMiddleware, FormsController.submitForm);
-router.get('/forms/:formId/export-pdf', authMiddleware, FormsController.exportFormPDF);
+router.get('/forms/:formId/export-docx', authMiddleware, FormsController.exportFormDocx);
+router.get('/forms/:formId/export-pdf', authMiddleware, FormsController.exportFormPdfViaLibreOffice);
 router.get('/forms/:formId', authMiddleware, FormsController.getFormById);
 router.put('/forms/:formId', authMiddleware, FormsController.updateForm);
 router.patch('/forms/:formId', authMiddleware, FormsController.updateForm);

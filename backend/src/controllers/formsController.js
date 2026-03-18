@@ -8,10 +8,44 @@ const { ValidationError, NotFoundError } = require('../utils/errors');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const { execFile } = require('child_process');
+const os = require('os');
 const db = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 const pdfConfig = require('../config/pdfConfig');
 const AIReportGenerator = require('../services/aiReportGenerator');
+const formDocumentService = require('../services/formDocumentService');
+
+/**
+ * Convert a DOCX buffer to PDF using LibreOffice headless.
+ * Returns a PDF buffer.
+ */
+async function convertDocxToPdf(docxBuffer) {
+  const tmpDir = os.tmpdir();
+  const tmpDocx = path.join(tmpDir, `vigilo_${Date.now()}.docx`);
+  const tmpPdf  = tmpDocx.replace('.docx', '.pdf');
+
+  fs.writeFileSync(tmpDocx, docxBuffer);
+
+  await new Promise((resolve, reject) => {
+    // Try common LibreOffice binary locations
+    const soffice = process.platform === 'win32'
+      ? 'soffice'  // must be in PATH on Windows
+      : (fs.existsSync('/usr/bin/libreoffice') ? '/usr/bin/libreoffice' : 'libreoffice');
+
+    execFile(soffice, [
+      '--headless', '--convert-to', 'pdf', '--outdir', tmpDir, tmpDocx
+    ], { timeout: 30000 }, (err, stdout, stderr) => {
+      if (err) return reject(new Error(`LibreOffice conversion failed: ${err.message}`));
+      resolve();
+    });
+  });
+
+  const pdfBuffer = fs.readFileSync(tmpPdf);
+  // Cleanup temp files
+  try { fs.unlinkSync(tmpDocx); fs.unlinkSync(tmpPdf); } catch (_) {}
+  return pdfBuffer;
+}
 
 class FormsController {
   /**
@@ -629,6 +663,83 @@ class FormsController {
       });
     } catch (error) {
       next(error);
+    }
+  }
+
+  /**
+   * Export Form as Word (.docx)
+   * GET /api/forms/:formId/export-docx
+   */
+  static async exportFormDocx(req, res, next) {
+    try {
+      const formId = req.params.formId || req.params.id;
+      const row = await db.getAsync(
+        `SELECT f.id, f.form_type, f.form_data, f.created_at, f.ai_report, f.company_id,
+                u.full_name AS user_name
+         FROM forms f LEFT JOIN users u ON f.user_id = u.id
+         WHERE f.id = ?`,
+        [formId]
+      );
+      if (!row) return res.status(404).json({ success: false, message: 'Form not found' });
+
+      row.form_data = typeof row.form_data === 'string' ? JSON.parse(row.form_data) : row.form_data;
+
+      const company = row.company_id
+        ? await db.getAsync('SELECT name, industry, site_location FROM companies WHERE id = ?', [row.company_id])
+        : null;
+
+      const buffer = await formDocumentService.generateDocx(row, { company });
+      const label = row.form_type.replace(/([A-Z])/g, '_$1').toUpperCase();
+      const filename = `${label}_${row.id}_${row.created_at?.toString().slice(0,10)}.docx`;
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(buffer);
+    } catch (err) {
+      logger.error('exportFormDocx error', { error: err.message });
+      next(err);
+    }
+  }
+
+  /**
+   * Export Form as PDF (DOCX → LibreOffice conversion)
+   * GET /api/forms/:formId/export-pdf
+   */
+  static async exportFormPdfViaLibreOffice(req, res, next) {
+    try {
+      const formId = req.params.formId || req.params.id;
+      const row = await db.getAsync(
+        `SELECT f.id, f.form_type, f.form_data, f.created_at, f.ai_report, f.company_id,
+                u.full_name AS user_name
+         FROM forms f LEFT JOIN users u ON f.user_id = u.id
+         WHERE f.id = ?`,
+        [formId]
+      );
+      if (!row) return res.status(404).json({ success: false, message: 'Form not found' });
+
+      row.form_data = typeof row.form_data === 'string' ? JSON.parse(row.form_data) : row.form_data;
+
+      const company = row.company_id
+        ? await db.getAsync('SELECT name, industry, site_location FROM companies WHERE id = ?', [row.company_id])
+        : null;
+
+      const docxBuffer = await formDocumentService.generateDocx(row, { company });
+      const pdfBuffer = await convertDocxToPdf(docxBuffer);
+
+      const label = row.form_type.replace(/([A-Z])/g, '_$1').toUpperCase();
+      const filename = `${label}_${row.id}_${row.created_at?.toString().slice(0,10)}.pdf`;
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(pdfBuffer);
+    } catch (err) {
+      logger.error('exportFormPdf error', { error: err.message });
+      // Fall back to legacy PDFKit export if LibreOffice unavailable
+      if (err.message.includes('LibreOffice')) {
+        logger.warn('LibreOffice unavailable, falling back to PDFKit');
+        return FormsController.exportFormPDF(req, res, next);
+      }
+      next(err);
     }
   }
 
