@@ -194,7 +194,7 @@ exports.getAllDocuments = async (req, res) => {
         a.sharepoint_status,
         a.sharepoint_url,
         a.archived_at,
-        json_object(
+        json_build_object(
           'facility_name', a.facility_name,
           'audit_date', a.audit_date,
           'auditor_name', a.auditor_name,
